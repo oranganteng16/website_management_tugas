@@ -1,0 +1,78 @@
+// Prisma Schema for Manajemen Tugas (Neon PostgreSQL)
+// Dokumentasi: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  password  String
+  role      String     @default("user") // "owner" | "user"
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  tasks     Task[]
+  reports   Report[]
+  reminders Reminder[]
+
+  @@map("users")
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  name      String
+  desc      String
+  deadline  DateTime
+  status    String   @default("Pending") // "Pending" | "Proses" | "Selesai"
+  category  String   @default("")         // Kategori / Mata Pelajaran (Opsional)
+  priority  String   @default("Medium")   // "Low" | "Medium" | "High"
+  userId    Int?     @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([deadline])
+  @@index([status])
+  @@map("tasks")
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  name      String
+  desc      String
+  deadline  DateTime
+  status    String   @default("Draft") // "Draft" | "Terkirim"
+  userId    Int?     @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([deadline])
+  @@index([status])
+  @@map("reports")
+}
+
+model Reminder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  desc      String
+  deadline  DateTime
+  status    String   @default("Aktif") // "Aktif" | "Selesai"
+  userId    Int?     @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([deadline])
+  @@index([status])
+  @@map("reminders")
+}

@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk — Sistem Manajemen Tugas</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=fallback" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+
+<!-- ===== LOGIN PAGE ===== -->
+<div id="login-overlay-backdrop"></div>
+<div id="login-screen" role="dialog" aria-modal="true" aria-label="Manajemen Tugas">
+    <div class="login-container">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-icon">
+                <span class="material-icons-round">assignment</span>
+            </div>
+            <div class="header-content">
+                <h1>Manajemen Tugas</h1>
+                <p class="subtitle">Workplace Team</p>
+                <p class="sub">Kelola tugas tim dengan efisien dan terstruktur.</p>
+            </div>
+        </div>
+
+        <!-- Auth Toggle -->
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="login-tab" onclick="switchAuthMode('login')">Masuk</button>
+            <button class="auth-tab" id="register-tab" onclick="switchAuthMode('register')">Daftar Akun</button>
+        </div>
+
+        <!-- Form -->
+        <div id="login-form-container">
+            <form id="login-form" novalidate>
+                <div class="form-group">
+                    <label for="login-email">Alamat Email</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <span class="material-icons-round">email</span>
+                        </span>
+                        <input type="email" id="login-email" autocomplete="email" placeholder="nama@perusahaan.com" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Kata Sandi</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <span class="material-icons-round">lock</span>
+                        </span>
+                        <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required>
+                        <span class="toggle-password" onclick="toggleLoginPassword()">
+                            <span class="material-icons-round">visibility</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn-login" id="login-submit">
+                    <span class="btn-text">Masuk ke Sistem</span>
+                    <span class="btn-loading"></span>
+                </button>
+
+                <div class="auth-links">
+                    <a href="#" onclick="event.preventDefault();document.getElementById('login-password').focus();">Lupa Kata Sandi?</a>
+                </div>
+
+                <div id="login-error" class="error-msg" style="color:#FCA5A5;font-size:13px;margin-top:12px;display:none;"></div>
+            </form>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register-form-container" class="hidden">
+            <form id="register-form" novalidate>
+                <div class="form-group">
+                    <label for="reg-name">Nama Lengkap</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <span class="material-icons-round">person</span>
+                        </span>
+                        <input type="text" id="reg-name" autocomplete="name" placeholder="Nama Anda" minlength="2" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Alamat Email</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <span class="material-icons-round">email</span>
+                        </span>
+                        <input type="email" id="reg-email" autocomplete="email" placeholder="nama@perusahaan.com" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Kata Sandi</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <span class="material-icons-round">lock</span>
+                        </span>
+                        <input type="password" id="reg-password" autocomplete="new-password" placeholder="Minimal 3 karakter" minlength="3" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">Peran</label>
+                    <p class="form-hint">Akun baru akan dibuat sebagai anggota workspace.</p>
+                </div>
+                <button type="submit" class="btn-login" id="register-submit">
+                    <span class="btn-text">Daftar</span>
+                    <span class="btn-loading"></span>
+                </button>
+                <div class="auth-links">
+                    <span id="register-error" style="color:#FCA5A5;font-size:13px;margin-top:12px;display:none;"></span>
+                </div>
+            </form>
+        </div>
+
+        <!-- Demo Accounts -->
+        <div class="demo-accounts">
+            <span class="demo-label">Belum punya akun?</span>
+            <div class="demo-buttons">
+                <button class="demo-btn" onclick="switchAuthMode('register')">
+                    <span class="material-icons-round">person</span>
+                    Daftar akun gratis
+                </button>
+            </div>
+            <div class="demo-links" style="text-align:center;margin-top:12px;font-size:12px;color:#94A3B8;">
+                <button onclick="closeLogin()" style="background:none;border:none;color:#4ADE80;text-decoration:underline;cursor:pointer;padding:0;margin:0;">← Kembali ke situs</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== LANDING PAGE (Halaman Luar) ===== -->
+<div id="landing-overlay"></div>
+<div id="landing">
+  <section class="landing-hero">
+    <div class="landing-hero-text">
+      <p class="landing-badge">Manajemen Tim Modern</p>
+      <h1>Todo &amp; Kanban, <em>Lebih Cepat</em></h1>
+      <p class="landing-desc">Kelola tugas, laporan, dan pengingat tim dari satu tempat. Prioritas yang sedang berjalan tampil jelas tanpa ribet.</p>
+      <div class="landing-actions">
+        <button class="btn-primary" onclick="openLogin()">Mulai Sekarang</button>
+        <button class="btn-secondary" onclick="openRegister()">Buat Akun Gratis</button>
+      </div>
+      <p class="landing-note">Tanpa ribet · Tanpa email spam · Bisa dicoba langsung</p>
+    </div>
+    <div class="landing-illustration" aria-hidden="true">
+      <div class="dash-preview">
+        <div class="dash-card"></div>
+        <div class="dash-card accent"></div>
+        <div class="dash-card green"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-features">
+    <h2>Fitsur yang kamu dapatkan</h2>
+    <div class="features-grid">
+      <div class="feature"><span class="feature-icon">📋</span><h3>Tugas</h3><p>Buat, prioritaskan, dan pantau deadline secara real-time.</p></div>
+      <div class="feature"><span class="feature-icon">📊</span><h3>Laporan</h3><p>Lihat progres tim dalam hitungan detik tanpa manual.</p></div>
+      <div class="feature"><span class="feature-icon">⏰</span><h3>Pengingat</h3><p>Notifikasi otomatis saat deadline mendekat.</p></div>
+      <div class="feature"><span class="feature-icon">🔒</span><h3>Keamanan</h3><p>Login aman, role Owner/User, dan rate limit.</p></div>
+    </div>
+  </section>
+
+  <section class="landing-testimonials">
+    <h2>Apa kata pengguna</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">“Sistem ini menggantikan spreadsheet tim kami. Jelas, ringkas, dan tidak ribet.” — <strong>Rishndle</strong>, Owner</div>
+      <div class="testimonial">“Dashboardnya jelas. Tugas-tugas kita bisa dipantau tanpa payung teknis berlebih.” — <strong>User</strong></div>
+    </div>
+  </section>
+
+  <footer class="landing-footer"><p>✦ Kelola tugas dengan lebih baik, mulai hari ini.</p></footer>
+</div>
+
+<div id="app-container" style="display:none;">
+    <div id="sidebar-overlay"></div>
+    <aside id="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <span class="material-icons-round">task_alt</span>
+            </div>
+            <div class="logo-text">
+                <span class="app-name">ManageTugas</span>
+                <span class="app-tag">Project Board</span>
+            </div>
+            <span class="material-icons-round" style="cursor:pointer;color:var(--text-secondary);font-size:22px;" onclick="toggleSidebar()">menu</span>
+        </div>
+        <nav class="nav">
+            <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <span class="nav-icon" style="background:rgba(34,197,94,0.16);"><span class="material-icons-round">dashboard</span></span>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-btn" data-tab="kanban" onclick="switchTab('kanban')">
+                <span class="nav-icon" style="background:rgba(245,158,11,0.18);"><span class="material-icons-round">kanban</span></span>
+                <span>Kanban Board</span>
+            </button>
+            <button class="nav-btn" data-tab="tasks" onclick="switchTab('tasks')">
+                <span class="nav-icon" style="background:rgba(16,185,129,0.18);"><span class="material-icons-round">list</span></span>
+                <span>My Tasks</span>
+            </button>
+            <button class="nav-btn" data-tab="calendar" onclick="switchTab('calendar')">
+                <span class="nav-icon" style="background:rgba(34,197,94,0.16);"><span class="material-icons-round">calendar_month</span></span>
+                <span>Calendar</span>
+            </button>
+            <button class="nav-btn" data-tab="reports" onclick="switchTab('reports')">
+                <span class="nav-icon" style="background:rgba(139,92,246,0.18);"><span class="material-icons-round">analytics</span></span>
+                <span>Reports / Analytics</span>
+            </button>
+            <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">
+                <span class="nav-icon" style="background:rgba(255,255,255,0.08);"><span class="material-icons-round">settings</span></span>
+                <span>Settings</span>
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar" id="sidebar-user-avatar">U</div>
+                <div class="user-info">
+                    <div class="name" id="sidebar-user-name">User Name</div>
+                    <div class="role" id="sidebar-user-role">Owner</div>
+                </div>
+                <span class="material-icons-round" style="color:var(--text-secondary);">keyboard_arrow_right</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <span class="material-icons-round">logout</span>
+                <span>Keluar</span>
+            </button>
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <div class="content-area">
+
+            <!-- DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="page-header">
+                    <div>
+                        <h1 id="page-title">Dashboard</h1>
+                        <p class="sub" id="page-desc">Ringkasan aktivitas dan statistik terkini, kemudian kembangkan ke kanban harian.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn-primary" onclick="openModal('task','create')">
+                            <span class="material-icons-round">add</span>
+                            <span>Tambah tugas</span>
+                        </button>
+                        <span class="material-icons-round text-slate-400" style="cursor:pointer;" onclick="showQuickHelp()">help_outline</span>
+                    </div>
+                </div>
+
+                <div class="activity-feed welcome-feed">
+                    <div class="activity-item">
+                        <div class="act-icon" style="background:rgba(34,197,94,0.16);color:#4ADE80;">
+                            <span class="material-icons-round">person</span>
+                        </div>
+                        <div class="act-body">
+                            <div class="act-text" id="greeting-message">Selamat datang, Owner! 👋</div>
+                            <div class="act-time" id="greeting-time">Hari ini, tanggal <span id="today-date"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(34,197,94,0.16);color:#4ADE80;">
+                            <span class="material-icons-round">assignment</span>
+                        </div>
+                        <div class="stat-label">Total Tasks</div>
+                        <div class="stat-number" id="stat-total-tasks">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(16,185,129,0.14);color:#10B981;">
+                            <span class="material-icons-round">check_circle</span>
+                        </div>
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-number" id="stat-completed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(245,158,11,0.14);color:#F59E0B;">
+                            <span class="material-icons-round">schedule</span>
+                        </div>
+                        <div class="stat-label">In Progress</div>
+                        <div class="stat-number" id="stat-in-progress">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(239,68,68,0.14);color:#EF4444;">
+                            <span class="material-icons-round">warning</span>
+                        </div>
+                        <div class="stat-label">Overdue</div>
+                        <div class="stat-number" id="stat-overdue">0</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-insights">
+                    <section class="progress-panel">
+                        <div class="section-heading">
+                            <div>
+                                <h2>Progres tugas</h2>
+                                <p>Ringkasan status seluruh tugas Anda</p>
+                            </div>
+                            <span class="progress-total" id="progress-completion">0%</span>
+                        </div>
+                        <div class="progress-track"><span id="progress-bar-completed"></span></div>
+                        <div class="progress-breakdown">
+                            <div><span class="progress-dot done-dot"></span><span>Selesai</span><strong id="progress-done-count">0</strong></div>
+                            <div><span class="progress-dot in-progress-dot"></span><span>Berjalan</span><strong id="progress-active-count">0</strong></div>
+                            <div><span class="progress-dot todo-dot"></span><span>To do</span><strong id="progress-pending-count">0</strong></div>
+                        </div>
+                    </section>
+                    <section class="activity-feed recent-activity">
+                        <div class="section-heading">
+                            <div>
+                                <h2>Aktivitas terbaru</h2>
+                                <p>Perubahan terbaru pada tugas</p>
+                            </div>
+                        </div>
+                        <div id="recent-activity-list" class="recent-activity-list">
+                            <p class="muted-copy">Belum ada aktivitas.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="kanban-wrapper" id="kanban-section">
+                    <div class="kanban-header">
+                        <h2>
+                            <span class="material-icons-round" style="color:#F59E0B;">kanban</span>
+                            Kanban Board
+                        </h2>
+                        <div class="header-actions">
+                            <div class="kanban-filters" style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <input type="text" id="kanban-search" oninput="applyKanbanFilters()" placeholder="Cari tugas..." style="background:var(--bg);border:1px solid rgba(255,255,255,0.10);color:#fff;padding:8px 12px;border-radius:8px;outline:none;transition:border-color 0.2s;">
+                                <select id="kanban-status-filter" onchange="applyKanbanFilters()" style="background:var(--bg);border:1px solid rgba(255,255,255,0.10);color:#fff;padding:8px 36px 8px 12px;border-radius:8px;outline:none;cursor:pointer;">
+                                    <option value="">Semua Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Proses">Proses</option>
+                                    <option value="Selesai">Selesai</option>
+                                </select>
+                                <select id="kanban-priority-filter" onchange="applyKanbanFilters()" style="background:var(--bg);border:1px solid rgba(255,255,255,0.10);color:#fff;padding:8px 36px 8px 12px;border-radius:8px;outline:none;cursor:pointer;">
+                                    <option value="">Semua Prioritas</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <button onclick="openModal('task','create')" class="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                                <span class="material-icons-round">add</span>
+                                <span>Tambah Tugas</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="kanban-columns" id="kanban-columns">
+                        <div class="kanban-column" data-status="Pending">
+                            <div class="column-header">
+                                <span class="col-title">
+                                    <span class="material-icons-round" style="color:#374151;">queue</span>
+                                    To Do
+                                </span>
+                                <span class="col-count" id="count-todo">0</span>
+                            </div>
+                            <div class="kanban-cards" id="kanban-todo">
+                                <div class="empty-state" style="text-align:center;padding:24px;color:var(--text-light);">
+                                    <span class="material-icons-round" style="font-size:32px;color:var(--text-secondary);margin-bottom:8px;">inbox</span>
+                                    <p style="font-size:13px;">Belum ada tugas di kolom ini.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-column" data-status="Proses">
+                            <div class="column-header">
+                                <span class="col-title">
+                                    <span class="material-icons-round" style="color:#F59E0B;">schedule</span>
+                                    In Progress
+                                </span>
+                                <span class="col-count" id="count-in-progress">0</span>
+                            </div>
+                            <div class="kanban-cards" id="kanban-in-progress">
+                                <div class="empty-state" style="text-align:center;padding:24px;color:var(--text-light);">
+                                    <span class="material-icons-round" style="font-size:32px;color:var(--text-secondary);margin-bottom:8px;">sync</span>
+                                    <p style="font-size:13px;">Tugas sedang berjalan.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-column" data-status="Selesai">
+                            <div class="column-header">
+                                <span class="col-title">
+                                    <span class="material-icons-round" style="color:#10B981;">check_circle</span>
+                                    Done
+                                </span>
+                                <span class="col-count" id="count-done">0</span>
+                            </div>
+                            <div class="kanban-cards" id="kanban-done">
+                                <div class="empty-state" style="text-align:center;padding:24px;color:var(--text-light);">
+                                    <span class="material-icons-round" style="font-size:32px;color:var(--text-secondary);margin-bottom:8px;">done</span>
+                                    <p style="font-size:13px;">Tugas selesai.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="calendar-card">
+                        <div class="cal-header">
+                            <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;display:flex;align-items:center;gap:8px;">
+                                <span class="material-icons-round" style="color:#4ADE80;">calendar_month</span>
+                                Calendar
+                            </h3>
+                            <div class="cal-nav">
+                                <button onclick="prevMonth()"><span class="material-icons-round">chevron_left</span></button>
+                                <span id="calendar-month" style="font-size:14px;font-weight:700;color:#fff;">January 2026</span>
+                                <button onclick="nextMonth()"><span class="material-icons-round">chevron_right</span></button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid"></div>
+                    </div>
+                    <div class="reports-grid">
+                        <div class="report-item">
+                            <div class="report-header">
+                                <span class="report-title">Task Completion</span>
+                                <span class="chip" style="background:rgba(16,185,129,0.15);color:#10B981;"><span class="material-icons-round" style="font-size:14px;">pie_chart</span></span>
+                            </div>
+                            <div class="report-desc">Status penyelesaian tugas dan distribusi antar status.</div>
+                            <div class="report-meta">
+                                <span>Total: <strong id="report-total">0</strong></span>
+                                <span>Selesai: <strong id="report-completed" style="color:#10B981;">0</strong></span>
+                                <span>Proses: <strong id="report-in-progress" style="color:#F59E0B;">0</strong></span>
+                                <span>Pending: <strong id="report-pending" style="color:#374151;">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-header">
+                                <span class="report-title">Deadline Analysis</span>
+                                <span class="chip" style="background:rgba(34,197,94,0.15);color:#4ADE80;"><span class="material-icons-round" style="font-size:14px;">calendar_today</span></span>
+                            </div>
+                            <div class="report-desc">Rata-rata deadline dan tugas yang jatuh dalam 7 hari ke depan.</div>
+                            <div class="report-meta">
+                                <span>Avg Deadline: <strong id="report-avg-deadline">-</strong></span>
+                                <span>Due This Week: <strong id="report-this-week" style="color:#F59E0B;">0</strong></span>
+                                <span>Overdue: <strong id="report-overdue" style="color:#EF4444;">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TASKS TABLE -->
+            <div id="tab-tasks" class="tab-content hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>My Tasks</h1>
+                        <p class="sub">Kelola daftar tugas, filter, dan pantau kemajuan.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button onclick="openModal('task','create')" class="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                            <span class="material-icons-round">add</span>
+                            <span>Tambah Tugas</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="search-box" style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <input type="text" id="search-tasks" oninput="renderTasksTable()" placeholder="Cari tugas..." style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.10);background:var(--bg);color:#fff;outline:none;">
+                            <select id="filter-task-status" onchange="renderTasksTable()" style="padding:10px 32px 10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.10);background:var(--bg);color:#fff;outline:none;cursor:pointer;">
+                                <option value="">Semua Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Proses">Proses</option>
+                                <option value="Selesai">Selesai</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table id="tasks-table">
+                            <thead>
+                                <tr>
+                                    <th>Judul</th>
+                                    <th>Deskripsi</th>
+                                    <th>Kategori</th>
+                                    <th>Deadline</th>
+                                    <th>Status</th>
+                                    <th>Prioritas</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasks-table-body">
+                                <tr><td colspan="7" style="text-align:center;color:var(--text-secondary);padding:32px;">Memuat daftar tugas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KANBAN BOARD -->
+            <div id="tab-kanban" class="tab-content hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Kanban Board</h1>
+                        <p class="sub">Papan kanban inti untuk mengelola tugas per kategori.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button onclick="openModal('task','create')" class="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                            <span class="material-icons-round">add</span>
+                            <span>Tambah Tugas</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="kanban-wrapper">
+                    <div class="kanban-header">
+                        <h2>
+                            <span class="material-icons-round" style="color:#F59E0B;">kanban</span>
+                            Papan Kanban
+                        </h2>
+                        <div class="header-actions">
+                            <div class="kanban-filters" style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <input type="text" id="kanban-search2" oninput="applyKanbanFilters()" placeholder="Cari tugas..." style="background:var(--bg);border:1px solid rgba(255,255,255,0.10);color:#fff;padding:8px 12px;border-radius:8px;outline:none;transition:border-color 0.2s;">
+                            </div>
+                            <button onclick="openModal('task','create')" class="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                                <span class="material-icons-round">add</span>
+                                <span>Tambah Tugas</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="kanban-columns" id="kanban-columns">
+                        <div class="kanban-column" data-status="Pending">
+                            <div class="column-header">
+                                <span class="col-title">
+                                    <span class="material-icons-round" style="color:#374151;">queue</span>
+                                    To Do
+                                </span>
+                                <span class="col-count" id="count-todo2">0</span>
+                            </div>
+                            <div class="kanban-cards" id="kanban-todo2">
+                                <div class="empty-state" style="text-align:center;padding:24px;color:var(--text-light);">
+                                    <span class="material-icons-round" style="font-size:32px;color:var(--text-secondary);margin-bottom:8px;">inbox</span>
+                                    <p style="font-size:13px;">Belum ada tugas di sini.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-column" data-status="Proses">
+                            <div class="column-header">
+                                <span class="col-title">
+                                    <span class="material-icons-round" style="color:#F59E0B;">schedule</span>
+                                    In Progress
+                                </span>
+                                <span class="col-count" id="count-in-progress2">0</span>
+                            </div>
+                            <div class="kanban-cards" id="kanban-in-progress2">
+                                <div class="empty-state" style="text-align:center;padding:24px;color:var(--text-light);">
+                                    <span class="material-icons-round" style="font-size:32px;color:var(--text-secondary);margin-bottom:8px;">sync</span>
+                                    <p style="font-size:13px;">Tugas sedang berjalan.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-column" data-status="Selesai">
+                            <div class="column-header">
+                                <span class="col-title">
+                                    <span class="material-icons-round" style="color:#10B981;">check_circle</span>
+                                    Done
+                                </span>
+                                <span class="col-count" id="count-done2">0</span>
+                            </div>
+                            <div class="kanban-cards" id="kanban-done2">
+                                <div class="empty-state" style="text-align:center;padding:24px;color:var(--text-light);">
+                                    <span class="material-icons-round" style="font-size:32px;color:var(--text-secondary);margin-bottom:8px;">done</span>
+                                    <p style="font-size:13px;">Tugas selesai.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CALENDAR -->
+            <div id="tab-calendar" class="tab-content hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Calendar</h1>
+                        <p class="sub">Lihat semua deadline tugas dalam kalender bulanan.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button onclick="openModal('task','create')" class="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                            <span class="material-icons-round">add</span>
+                            <span>Tambah Tugas</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="calendar-card" style="margin-top:-28px;position:relative;z-index:10;">
+                    <div class="cal-header">
+                        <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;display:flex;align-items:center;gap:8px;">
+                            <span class="material-icons-round" style="color:#4ADE80;">calendar_month</span>
+                            Calendar
+                        </h3>
+                        <div class="cal-nav">
+                            <button onclick="prevMonth()"><span class="material-icons-round">chevron_left</span></button>
+                            <span id="calendar-month2" style="font-size:14px;font-weight:700;color:#fff;">January 2026</span>
+                            <button onclick="nextMonth()"><span class="material-icons-round">chevron_right</span></button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid2"></div>
+                    <div class="calendar-task-list" id="calendar-task-list"></div>
+                </div>
+            </div>
+
+            <!-- REPORTS -->
+            <div id="tab-reports" class="tab-content hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Reports / Analytics</h1>
+                        <p class="sub">Statistik penyelesaian tugas yang mendukung pengambilan keputusan.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button onclick="openModal('report','create')" class="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                            <span class="material-icons-round">add</span>
+                            <span>Buat Laporan</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="reports-grid" style="margin-top:-28px;position:relative;z-index:10;">
+                    <div class="report-item">
+                        <div class="report-header">
+                            <span class="report-title">Task Completion</span>
+                            <span class="chip" style="background:rgba(16,185,129,0.15);color:#10B981;"><span class="material-icons-round" style="font-size:14px;">pie_chart</span></span>
+                        </div>
+                        <div class="report-desc">Status penyelesaian tugas dan distribusi antar status.</div>
+                        <div class="report-meta">
+                            <span>Total: <strong id="report-total2">0</strong></span>
+                            <span>Selesai: <strong id="report-completed2" style="color:#10B981;">0</strong></span>
+                            <span>Proses: <strong id="report-in-progress2" style="color:#F59E0B;">0</strong></span>
+                            <span>Pending: <strong id="report-pending2" style="color:#374151;">0</strong></span>
+                        </div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-header">
+                            <span class="report-title">Deadline Analysis</span>
+                            <span class="chip" style="background:rgba(34,197,94,0.15);color:#4ADE80;"><span class="material-icons-round" style="font-size:14px;">calendar_today</span></span>
+                        </div>
+                        <div class="report-desc">Rata-rata deadline dan tugas yang jatuh dalam 7 hari ke depan.</div>
+                        <div class="report-meta">
+                            <span>Avg Deadline: <strong id="report-avg-deadline2">-</strong></span>
+                            <span>Due This Week: <strong id="report-this-week2" style="color:#F59E0B;">0</strong></span>
+                            <span>Overdue: <strong id="report-overdue2" style="color:#EF4444;">0</strong></span>
+                        </div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-header">
+                            <span class="report-title">Priority Distribution</span>
+                            <span class="chip" style="background:rgba(245,158,11,0.15);color:#F59E0B;"><span class="material-icons-round" style="font-size:14px;">trending_up</span></span>
+                        </div>
+                        <div class="report-desc">Distribusi tugas berdasarkan tingkat prioritas.</div>
+                        <div class="report-meta">
+                            <span>High: <strong id="report-high" style="color:#EF4444;">0</strong></span>
+                            <span>Medium: <strong id="report-medium" style="color:#F59E0B;">0</strong></span>
+                            <span>Low: <strong id="report-low" style="color:#10B981;">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <section class="report-archive">
+                    <div class="section-heading">
+                        <div>
+                            <h2>Laporan tersimpan</h2>
+                            <p>Dokumen perkembangan yang sudah dibuat</p>
+                        </div>
+                    </div>
+                    <div id="reports-list" class="reports-list">
+                        <p class="muted-copy">Memuat laporan...</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="tab-settings" class="tab-content hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Settings</h1>
+                        <p class="sub">Kelola profil, preferensi, dan koneksi database.</p>
+                    </div>
+                </div>
+                <div class="settings-grid">
+                    <form class="settings-card" onsubmit="saveProfile(event)">
+                        <h3>Profil Pengguna</h3>
+                        <p class="settings-description">Perbarui informasi akun dan kata sandi Anda.</p>
+                        <div class="settings-fields">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons-round text-slate-400" style="font-size:20px;">person</span>
+                                <span style="font-size:13px;color:var(--text-secondary);">Nama</span>
+                                <input id="setting-name" type="text" required minlength="2" autocomplete="name" value="">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons-round text-slate-400" style="font-size:20px;">email</span>
+                                <span style="font-size:13px;color:var(--text-secondary);">Email</span>
+                                <input id="setting-email" type="email" required autocomplete="email" value="">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons-round text-slate-400" style="font-size:20px;">lock</span>
+                                <span style="font-size:13px;color:var(--text-secondary);">Kata sandi baru</span>
+                                <input id="setting-password" type="password" autocomplete="new-password" minlength="3" placeholder="Kosongkan jika tidak diubah">
+                            </div>
+                        </div>
+                        <button class="btn-primary settings-save" type="submit">Simpan perubahan</button>
+                    </form>
+                    <section class="settings-card">
+                        <h3>Status database</h3>
+                        <p class="settings-description">Status koneksi penyimpanan aplikasi saat ini.</p>
+                        <div class="flex items-center gap-2">
+                            <span class="material-icons-round" style="color:#10B981;font-size:20px;" id="db-indicator">fiber_manual_record</span>
+                            <span id="db-status-text" style="font-size:13px;color:var(--text-secondary);">Mode Local (Offline)</span>
+                        </div>
+                        <div class="settings-account">
+                            <span class="material-icons-round">verified_user</span>
+                            <span id="settings-account-role">Akun standar</span>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div id="modal-form" class="hidden">
+    <div class="modal-panel">
+        <div class="modal-header">
+            <h3 id="modal-title">Tambah Tugas</h3>
+            <button onclick="closeModal()" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <form onsubmit="handleFormSubmit(event)">
+            <div class="form-grid" id="form-fields"></div>
+            <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;border-top:1px solid rgba(255,255,255,0.07);padding-top:18px;">
+                <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition">Batal</button>
+                <button type="submit" id="btn-submit-modal" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white rounded-xl text-sm font-semibold shadow-md shadow-emerald-500/20 transition">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    let currentUser = null;
+    let authToken = localStorage.getItem('auth_token') || null;
+    let currentTab = 'dashboard';
+    const isFileProtocol = window.location.protocol === 'file:';
+    let apiBaseUrl = isFileProtocol ? 'http://localhost:3000' : '';
+    let isStandaloneMode = false;
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    let twofaToken = null;
+    let twofaUser = null;
+
+    let cacheData = { users: [], tasks: [], reports: [], reminders: [] };
+    const LOCAL_STORAGE_KEY = 'app_local_data';
+
+    function getLocalStorageData() {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (raw) {
+            try {
+                const saved = JSON.parse(raw);
+                const owner = Array.isArray(saved.users)
+                    ? saved.users.find(user => user.email === 'owner@app.com' && user.role === 'owner')
+                    : null;
+                const targetExists = Array.isArray(saved.users)
+                    && saved.users.some(user => user.email === 'rshndle@gmail.com');
+                if (owner && !targetExists) {
+                    owner.name = 'Rishndle';
+                    owner.email = 'rshndle@gmail.com';
+                    owner.password = 'mamahampuniaku2011';
+                    saveLocalStorageData(saved);
+                }
+                return saved;
+            } catch (e) {}
+        }
+        const initial = {
+            users: [
+                { id: 1, name: 'Rishndle', email: 'rshndle@gmail.com', password: 'mamahampuniaku2011', role: 'owner' },
+                { id: 2, name: 'Standard User', email: 'user@app.com', password: '123', role: 'user' }
+            ],
+            tasks: [
+                { id: 1, name: 'Membuat Desain UI/UX', desc: 'Menyelesaikan halaman dashboard modern', deadline: '2026-06-15', status: 'Proses', userId: 1, category: 'Desain', priority: 'High' },
+                { id: 2, name: 'Setup Repository Git & Neon DB', desc: 'Inisialisasi database Neon dan backend production', deadline: '2026-06-10', status: 'Selesai', userId: 2, category: 'Development', priority: 'Medium' },
+                { id: 3, name: 'Optimasi Keamanan & Deployment', desc: 'Implementasi JWT, bcrypt, helmet, rate limiting', deadline: '2026-06-20', status: 'Pending', userId: 1, category: 'Keamanan', priority: 'High' },
+                { id: 4, name: 'Audit Keamanan Aplikasi', desc: 'Pemeriksaan keamanan seluruh endpoint API', deadline: '2026-06-28', status: 'Pending', userId: 1, category: 'Keamanan', priority: 'High' },
+                { id: 5, name: 'Menyelesaikan Laporan Bulanan', desc: 'Mengisi dan mengirim laporan evaluasi bulanan', deadline: '2026-07-02', status: 'Proses', userId: 2, category: 'Laporan', priority: 'Medium' }
+            ],
+            reports: [
+                { id: 1, name: 'Laporan Harian Kerja', desc: 'Rekapitulasi tugas harian tim', deadline: '2026-06-12', status: 'Draft', userId: 1, category: 'Laporan' },
+                { id: 2, name: 'Laporan Evaluasi Sprint', desc: 'Analisis performa server dan koneksi database', deadline: '2026-06-25', status: 'Terkirim', userId: 2, category: 'Laporan' }
+            ],
+            reminders: [
+                { id: 1, name: 'Meeting Evaluasi Mingguan', desc: 'Rapat koordinasi bersama klien', deadline: '2026-06-14', status: 'Aktif', userId: 1, category: 'Rapat' },
+                { id: 2, name: 'Review Security Audit', desc: 'Pengecekan backup rutin database', deadline: '2026-06-18', status: 'Aktif', userId: 1, category: 'Keamanan' }
+            ]
+        };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
+        return initial;
+    }
+
+    function saveLocalStorageData(data) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data)); }
+
+    async function simulateApi(endpoint, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+        const body = options.body ? JSON.parse(options.body) : {};
+        const localData = getLocalStorageData();
+        await new Promise(r => setTimeout(r, 50));
+
+        if (endpoint.startsWith('/api/health')) {
+            return { success: true, status: 'healthy', database: { connected: false, latency: null, target: 'Local Browser', mode: 'Browser Local Storage', error: 'Backend offline. Jalankan npm run dev.' } };
+        }
+        if (endpoint === '/api/auth/login' && method === 'POST') {
+            const user = localData.users.find(u => u.email.toLowerCase() === String(body.email || '').toLowerCase());
+            if (!user || user.password !== body.password) throw new Error('Email atau password salah.');
+            const { password: _, ...safeUser } = user;
+            return { success: true, token: 'standalone-token-' + user.id, user: safeUser, message: 'Selamat datang kembali, ' + user.name + '! (Mode Lokal)' };
+        }
+        if (endpoint === '/api/auth/register' && method === 'POST') {
+            if (localData.users.some(user => user.email.toLowerCase() === String(body.email || '').toLowerCase())) {
+                throw new Error('Email sudah terdaftar. Silakan gunakan email lain.');
+            }
+            const id = localData.users.length ? Math.max(...localData.users.map(user => user.id)) + 1 : 1;
+            const user = { id, name: body.name.trim(), email: body.email.trim().toLowerCase(), password: body.password, role: 'user' };
+            localData.users.push(user);
+            saveLocalStorageData(localData);
+            const { password: _, ...safeUser } = user;
+            return { success: true, token: 'standalone-token-' + user.id, user: safeUser, message: 'Registrasi berhasil!' };
+        }
+        if (endpoint === '/api/auth/me' && method === 'PUT') {
+            if (!currentUser) throw new Error('Unauthorized');
+            const index = localData.users.findIndex(user => user.id === currentUser.id);
+            if (index < 0) throw new Error('User tidak ditemukan.');
+            if (body.email && localData.users.some(user => user.id !== currentUser.id && user.email.toLowerCase() === body.email.toLowerCase())) {
+                throw new Error('Email sudah digunakan oleh akun lain.');
+            }
+            localData.users[index] = {
+                ...localData.users[index],
+                name: body.name || localData.users[index].name,
+                email: body.email ? body.email.toLowerCase() : localData.users[index].email,
+                password: body.password || localData.users[index].password,
+            };
+            saveLocalStorageData(localData);
+            const { password: _, ...user } = localData.users[index];
+            return { success: true, token: 'standalone-token-' + user.id, user, message: 'Profil berhasil diperbarui.' };
+        }
+        if (endpoint === '/api/auth/me') { if (!currentUser) throw new Error('Unauthorized'); return { success: true, user: currentUser }; }
+        if (endpoint === '/api/dashboard/stats') {
+            const userTasks = localData.tasks.filter(task => task.userId === currentUser?.id);
+            const nearestDeadlines = [...localData.tasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 5);
+            return {
+                success: true,
+                stats: {
+                    system: { users: localData.users.length, tasks: localData.tasks.length, reports: localData.reports.length, reminders: localData.reminders.length },
+                    user: {
+                        tasks: userTasks.length,
+                        completed: userTasks.filter(task => task.status === 'Selesai').length,
+                        inProgress: userTasks.filter(task => task.status === 'Proses').length,
+                        pending: userTasks.filter(task => task.status === 'Pending').length,
+                        overdue: userTasks.filter(task => task.status !== 'Selesai' && new Date(task.deadline) < new Date()).length,
+                        reports: localData.reports.filter(report => report.userId === currentUser?.id).length,
+                        reminders: localData.reminders.filter(reminder => reminder.userId === currentUser?.id).length,
+                    },
+                    nearestDeadlines,
+                },
+            };
+        }
+        if (endpoint.startsWith('/api/users')) {
+            if (method === 'GET') return { success: true, users: localData.users.map(u => ({ ...u })) };
+            if (method === 'POST') { const id = localData.users.length ? Math.max(...localData.users.map(u => u.id)) + 1 : 1; const u = { id, ...body }; localData.users.push(u); saveLocalStorageData(localData); return { success: true, message: 'User berhasil ditambahkan', user: u }; }
+            if (method === 'PUT') { const id = parseInt(endpoint.split('/').pop(), 10); const idx = localData.users.findIndex(u => u.id === id); if (idx !== -1) { localData.users[idx] = { ...localData.users[idx], ...body }; saveLocalStorageData(localData); return { success: true, message: 'User berhasil diperbarui' }; } throw new Error('User tidak ditemukan'); }
+            if (method === 'DELETE') { const id = parseInt(endpoint.split('/').pop(), 10); localData.users = localData.users.filter(u => u.id !== id); saveLocalStorageData(localData); return { success: true, message: 'User berhasil dihapus' }; }
+        }
+        if (endpoint.startsWith('/api/tasks')) {
+            if (method === 'GET') return { success: true, tasks: currentUser?.role === 'owner' ? localData.tasks : localData.tasks.filter(task => task.userId === currentUser?.id) };
+            if (method === 'POST') { const id = localData.tasks.length ? Math.max(...localData.tasks.map(t => t.id)) + 1 : 1; const t = { id, ...body, priority: body.priority || 'Medium' }; localData.tasks.push(t); saveLocalStorageData(localData); return { success: true, message: 'Task berhasil ditambahkan', task: t }; }
+            if (method === 'PUT') { const id = parseInt(endpoint.split('/').pop(), 10); const idx = localData.tasks.findIndex(t => t.id === id); if (idx !== -1) { localData.tasks[idx] = { ...localData.tasks[idx], ...body, priority: body.priority || localData.tasks[idx].priority }; saveLocalStorageData(localData); return { success: true, message: 'Task berhasil diperbarui' }; } throw new Error('Task tidak ditemukan'); }
+            if (method === 'DELETE') { const id = parseInt(endpoint.split('/').pop(), 10); localData.tasks = localData.tasks.filter(t => t.id !== id); saveLocalStorageData(localData); return { success: true, message: 'Task berhasil dihapus' }; }
+        }
+        if (endpoint.startsWith('/api/reports')) {
+            if (method === 'GET') return { success: true, reports: localData.reports };
+            if (method === 'POST') { const id = localData.reports.length ? Math.max(...localData.reports.map(r => r.id)) + 1 : 1; const r = { id, ...body }; localData.reports.push(r); saveLocalStorageData(localData); return { success: true, message: 'Report berhasil ditambahkan', report: r }; }
+            if (method === 'PUT') { const id = parseInt(endpoint.split('/').pop(), 10); const idx = localData.reports.findIndex(r => r.id === id); if (idx !== -1) { localData.reports[idx] = { ...localData.reports[idx], ...body }; saveLocalStorageData(localData); return { success: true, message: 'Report berhasil diperbarui' }; } throw new Error('Report tidak ditemukan'); }
+            if (method === 'DELETE') { const id = parseInt(endpoint.split('/').pop(), 10); localData.reports = localData.reports.filter(r => r.id !== id); saveLocalStorageData(localData); return { success: true, message: 'Report berhasil dihapus' }; }
+        }
+        if (endpoint.startsWith('/api/reminders')) {
+            if (method === 'GET') return { success: true, reminders: localData.reminders };
+            if (method === 'POST') { const id = localData.reminders.length ? Math.max(...localData.reminders.map(r => r.id)) + 1 : 1; const r = { id, ...body }; localData.reminders.push(r); saveLocalStorageData(localData); return { success: true, message: 'Reminder berhasil ditambahkan', reminder: r }; }
+            if (method === 'PUT') { const id = parseInt(endpoint.split('/').pop(), 10); const idx = localData.reminders.findIndex(r => r.id === id); if (idx !== -1) { localData.reminders[idx] = { ...localData.reminders[idx], ...body }; saveLocalStorageData(localData); return { success: true, message: 'Reminder berhasil diperbarui' }; } throw new Error('Reminder tidak ditemukan'); }
+            if (method === 'DELETE') { const id = parseInt(endpoint.split('/').pop(), 10); localData.reminders = localData.reminders.filter(r => r.id !== id); saveLocalStorageData(localData); return { success: true, message: 'Reminder berhasil dihapus' }; }
+        }
+        return { success: true };
+    }
+
+    async function apiFetch(endpoint, options = {}) {
+        if (isStandaloneMode) return await simulateApi(endpoint, options);
+        const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+        if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+        const url = endpoint.startsWith('http') ? endpoint : (apiBaseUrl + endpoint);
+        try {
+            const res = await fetch(url, { ...options, headers });
+            const data = await res.json();
+            if (res.status === 401 && !endpoint.includes('/login')) { handleLogout(false); showToast('Sesi login telah kedaluwarsa. Silakan masuk kembali.', 'warning'); throw new Error(data.message || 'Unauthorized'); }
+            if (!res.ok) { const errMsg = data.errors ? data.errors.map(e => e.message).join(', ') : (data.message || 'Terjadi kesalahan sistem.'); throw new Error(errMsg); }
+            return data;
+        } catch (err) {
+            if (err instanceof TypeError || (err.message && err.message.includes('fetch'))) {
+                isStandaloneMode = true; updateStandaloneBanner(); return await simulateApi(endpoint, options);
+            }
+            console.error('API Error:', err); throw err;
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        let bgClasses = 'bg-slate-900 border-slate-700 text-slate-200';
+        let icon = 'info';
+        if (type === 'success') { bgClasses = 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'; icon = 'check_circle'; }
+        else if (type === 'error') { bgClasses = 'bg-red-950/90 border-red-500/50 text-red-200'; icon = 'error'; }
+        else if (type === 'warning') { bgClasses = 'bg-amber-950/90 border-amber-500/50 text-amber-200'; icon = 'warning'; }
+        toast.className = `toast ${bgClasses}`;
+        const iconElement = document.createElement('span');
+        iconElement.className = 'material-icons-round text-base';
+        iconElement.innerText = icon;
+        const messageElement = document.createElement('span');
+        messageElement.textContent = message;
+        toast.append(iconElement, messageElement);
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; setTimeout(() => toast.remove(), 300); }, 3500);
+    }
+
+    function updateAuthUI() {
+        if (currentUser) {
+            document.getElementById('sidebar-user-name').innerText = currentUser.name;
+            document.getElementById('sidebar-user-role').innerText = currentUser.role;
+            document.getElementById('sidebar-user-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('settings-account-role').innerText = currentUser.role === 'owner' ? 'Pemilik workspace' : 'Anggota workspace';
+        }
+    }
+
+    function switchTab(tabName) {
+        if (!currentUser && tabName !== 'dashboard') { showToast('Silakan login terlebih dahulu.', 'warning'); return; }
+        currentTab = tabName;
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById('tab-' + tabName);
+        if (target) target.classList.remove('hidden');
+
+        document.querySelectorAll('#sidebar .nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tabName) btn.classList.add('active');
+        });
+
+        const titles = {
+            dashboard: ['Dashboard', 'Ringkasan aktivitas dan statistik terkini'],
+            kanban: ['Kanban Board', 'Papan kanban inti untuk mengelola tugas'],
+            tasks: ['My Tasks', 'Kelola daftar tugas dan pantau deadline'],
+            calendar: ['Calendar', 'Lihat semua deadline tugas'],
+            reports: ['Reports / Analytics', 'Statistik penyelesaian tugas'],
+            settings: ['Settings', 'Kelola profil dan preferensi']
+        };
+        const t = titles[tabName] || ['Dashboard', ''];
+        const pageTitle = document.querySelector(`#tab-${tabName} .page-header h1`);
+        if (pageTitle) pageTitle.innerText = t[0];
+        const pageDescription = document.querySelector(`#tab-${tabName} .page-header .sub`);
+        if (pageDescription) pageDescription.innerText = t[1];
+
+        if (tabName === 'dashboard') renderDashboard();
+        else if (tabName === 'kanban') renderKanban();
+        else if (tabName === 'tasks') renderTasksTable();
+        else if (tabName === 'calendar') renderCalendar();
+        else if (tabName === 'reports') renderReportsPage();
+        else if (tabName === 'settings') renderSettings();
+
+        if (window.innerWidth <= 1024) {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+    }
+
+    async function refreshCurrentTaskView() {
+        if (currentTab === 'dashboard') return renderDashboard();
+        if (currentTab === 'kanban') return renderKanban();
+        if (currentTab === 'tasks') return renderTasksTable();
+        if (currentTab === 'calendar') return renderCalendar();
+        if (currentTab === 'reports') return renderReportsPage();
+    }
+
+    function renderRecentActivity(tasks) {
+        const container = document.getElementById('recent-activity-list');
+        const recent = [...tasks]
+            .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0))
+            .slice(0, 4);
+
+        if (!recent.length) {
+            container.innerHTML = '<p class="muted-copy">Belum ada aktivitas. Tambahkan tugas pertama Anda.</p>';
+            return;
+        }
+
+        container.innerHTML = recent.map(task => {
+            const date = task.updatedAt || task.createdAt;
+            const dateLabel = date
+                ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(date))
+                : 'Baru saja';
+            const icon = task.status === 'Selesai' ? 'task_alt' : task.status === 'Proses' ? 'autorenew' : 'add_task';
+            return `<div class="recent-activity-item">
+                <span class="recent-activity-icon"><span class="material-icons-round">${icon}</span></span>
+                <div><strong>${escapeHtml(task.name)}</strong><span>${escapeHtml(task.status || 'Pending')} · ${dateLabel}</span></div>
+            </div>`;
+        }).join('');
+    }
+
+    async function renderDashboard() {
+        if (!currentUser) {
+            document.getElementById('stat-total-tasks').innerText = '0';
+            document.getElementById('stat-completed').innerText = '0';
+            document.getElementById('stat-in-progress').innerText = '0';
+            document.getElementById('stat-overdue').innerText = '0';
+            return;
+        }
+        try {
+            const [taskResponse, statsResponse] = await Promise.all([
+                apiFetch('/api/tasks'),
+                apiFetch('/api/dashboard/stats'),
+            ]);
+            cacheData.tasks = taskResponse.tasks || [];
+            const tasks = cacheData.tasks;
+            const total = currentUser.role === 'owner'
+                ? statsResponse.stats.system.tasks
+                : statsResponse.stats.user.tasks;
+            const completed = tasks.filter(task => task.status === 'Selesai').length;
+            const inProgress = tasks.filter(task => task.status === 'Proses').length;
+            const pending = tasks.filter(task => task.status === 'Pending').length;
+            const overdue = tasks.filter(task =>
+                task.status !== 'Selesai' && new Date(`${task.deadline}T23:59:59`) < new Date()
+            ).length;
+            const completion = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+
+            document.getElementById('greeting-message').innerText = `Selamat datang, ${currentUser.name}!`;
+            document.getElementById('today-date').innerText = new Intl.DateTimeFormat('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+            }).format(new Date());
+            document.getElementById('stat-total-tasks').innerText = total;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-in-progress').innerText = inProgress;
+            document.getElementById('stat-overdue').innerText = overdue;
+            document.getElementById('progress-completion').innerText = `${completion}%`;
+            document.getElementById('progress-bar-completed').style.width = `${completion}%`;
+            document.getElementById('progress-done-count').innerText = completed;
+            document.getElementById('progress-active-count').innerText = inProgress;
+            document.getElementById('progress-pending-count').innerText = pending;
+            renderRecentActivity(tasks);
+            renderKanbanColumns();
+            updateKanbanCounts();
+        } catch (err) {
+            showToast('Gagal memuat ringkasan dashboard: ' + err.message, 'error');
+        }
+    }
+
+    async function renderKanban() {
+        if (!currentUser) return;
+        try {
+            const res = await apiFetch('/api/tasks');
+            cacheData.tasks = res.tasks || [];
+            renderKanbanColumns();
+            updateKanbanCounts();
+        } catch (err) {
+            showToast('Gagal memuat data tugas: ' + err.message, 'error');
+        }
+    }
+
+    function renderKanbanColumns() {
+        const tasks = [...(cacheData.tasks || [])].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        const filterStatus = document.getElementById('kanban-status-filter')?.value || '';
+        const filterPriority = document.getElementById('kanban-priority-filter')?.value || '';
+        const filterSearch = [
+            document.getElementById('kanban-search')?.value,
+            document.getElementById('kanban-search2')?.value,
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        const filtered = tasks.filter(t => {
+            if (filterStatus && t.status !== filterStatus) return false;
+            if (filterPriority && t.priority !== filterPriority) return false;
+            if (filterSearch && !`${t.name} ${t.desc} ${t.category || ''}`.toLowerCase().includes(filterSearch)) return false;
+            return true;
+        });
+
+        document.querySelectorAll('.kanban-column').forEach(column => {
+            const cards = column.querySelector('.kanban-cards');
+            if (!cards) return;
+            const status = column.dataset.status;
+            const colTasks = filtered.filter(task => task.status === status);
+            cards.innerHTML = '';
+            colTasks.forEach(task => {
+                cards.appendChild(renderKanbanCard(task));
+            });
+            if (!colTasks.length) {
+                const empty = document.createElement('div');
+                empty.className = 'empty-state';
+                empty.innerHTML = '<span class="material-icons-round">inbox</span><p>Tidak ada tugas di sini.</p>';
+                cards.appendChild(empty);
+            }
+            column.ondragover = event => {
+                event.preventDefault();
+                column.classList.add('drag-over');
+            };
+            column.ondragleave = event => {
+                if (!column.contains(event.relatedTarget)) column.classList.remove('drag-over');
+            };
+            column.ondrop = event => {
+                event.preventDefault();
+                column.classList.remove('drag-over');
+                const taskId = Number(event.dataTransfer.getData('text/plain'));
+                updateTaskStatus(status, taskId);
+            };
+        });
+    }
+
+    function renderKanbanCard(task) {
+        const card = document.createElement('div');
+        card.className = 'kanban-card';
+        card.style.cursor = 'grab';
+        card.draggable = true;
+        card.dataset.id = task.id;
+        card.dataset.status = task.status;
+        card.innerHTML = `
+            <div class="card-actions">
+                <button onclick="event.stopPropagation();openModal('task','edit',${task.id})" title="Edit"><span class="material-icons-round">edit</span></button>
+                <button onclick="event.stopPropagation();deleteTask(${task.id})" title="Hapus" style="color:#F87171;"><span class="material-icons-round">delete</span></button>
+            </div>
+            <div class="card-top">
+                <div style="flex:1;min-width:0;">
+                    <div class="card-title">${escapeHtml(task.name)}</div>
+                    <div class="card-desc">${escapeHtml(task.desc || '')}</div>
+                    <div class="card-meta">
+                        <span class="chip chip-priority-${(task.priority || 'Medium').toLowerCase()}">${task.priority || 'Medium'}</span>
+                        <span class="meta-item"><span class="material-icons-round" style="font-size:12px;">schedule</span>${task.deadline || '—'}</span>
+                        <span class="meta-item"><span class="material-icons-round" style="font-size:12px;">label</span>${task.category || '—'}</span>
+                    </div>
+                </div>
+                <select class="task-status-select" aria-label="Ubah status tugas" onclick="event.stopPropagation()">
+                    <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>To Do</option>
+                    <option value="Proses" ${task.status === 'Proses' ? 'selected' : ''}>In Progress</option>
+                    <option value="Selesai" ${task.status === 'Selesai' ? 'selected' : ''}>Done</option>
+                </select>
+            </div>
+        `;
+        card.addEventListener('dragstart', event => {
+            if (event.target.closest('button, select')) {
+                event.preventDefault();
+                return;
+            }
+            event.dataTransfer.setData('text/plain', String(task.id));
+            event.dataTransfer.effectAllowed = 'move';
+            card.classList.add('is-dragging');
+        });
+        card.addEventListener('dragend', () => card.classList.remove('is-dragging'));
+        card.querySelector('.task-status-select').addEventListener('change', event => {
+            updateTaskStatus(event.target.value, task.id);
+        });
+
+        return card;
+    }
+
+    function updateKanbanCounts() {
+        const tasks = cacheData.tasks || [];
+        const counts = {
+            'count-todo': tasks.filter(task => task.status === 'Pending').length,
+            'count-todo2': tasks.filter(task => task.status === 'Pending').length,
+            'count-in-progress': tasks.filter(task => task.status === 'Proses').length,
+            'count-in-progress2': tasks.filter(task => task.status === 'Proses').length,
+            'count-done': tasks.filter(task => task.status === 'Selesai').length,
+            'count-done2': tasks.filter(task => task.status === 'Selesai').length,
+        };
+        Object.entries(counts).forEach(([id, count]) => {
+            document.querySelectorAll(`[id="${id}"]`).forEach(element => element.innerText = count);
+        });
+    }
+
+    function applyKanbanFilters() {
+        renderKanbanColumns();
+        updateKanbanCounts();
+    }
+
+
+
+    async function updateTaskStatus(newStatus, taskId) {
+        const task = (cacheData.tasks || []).find(item => String(item.id) === String(taskId));
+        if (!task) return;
+        if (task.status === newStatus) return;
+        try {
+            const res = await apiFetch('/api/tasks/' + taskId, {
+                method: 'PUT',
+                body: JSON.stringify({ name: task.name, desc: task.desc, deadline: task.deadline, status: newStatus, category: task.category, priority: task.priority })
+            });
+            if (res.success) {
+                const idx = cacheData.tasks.findIndex(t => t.id === taskId);
+                if (idx !== -1) {
+                    cacheData.tasks[idx] = { ...cacheData.tasks[idx], status: newStatus };
+                    saveLocalStorageData({ ...getLocalStorageData(), tasks: cacheData.tasks });
+                    await refreshCurrentTaskView();
+                    showToast('Status tugas diperbarui.', 'success');
+                }
+            } else {
+                throw new Error(res.message || 'Gagal memperbarui status.');
+            }
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    function openModal(type, mode, id = null) {
+        if (!currentUser) { showToast('Silakan login terlebih dahulu.', 'warning'); return; }
+        document.getElementById('modal-form').classList.remove('hidden');
+        document.getElementById('form-type').value = type;
+        document.getElementById('form-id').value = id || '';
+        const titleMap = { user: 'User', task: 'Task', report: 'Report', reminder: 'Reminder' };
+        document.getElementById('modal-title').innerText = (mode === 'create' ? 'Tambah' : 'Edit') + ' ' + titleMap[type];
+        let item = {};
+        if (mode === 'edit' && id) {
+            const list = cacheData[type + 's'] || [];
+            item = list.find(x => x.id === id) || {};
+        }
+        let fields = '';
+        if (type === 'task') {
+            fields = `
+                <div class="form-group">
+                    <label>Nama Tugas</label>
+                    <input type="text" id="inp-name" required value="${escapeHtml(item.name || '')}">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="inp-desc" required rows="3">${escapeHtml(item.desc || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Kategori / Mata Pelajaran</label>
+                    <input type="text" id="inp-category" placeholder="Opsional" value="${escapeHtml(item.category || '')}">
+                </div>
+                <div class="form-group">
+                    <label>Prioritas</label>
+                    <select id="inp-priority">
+                        <option value="High" ${item.priority === 'High' ? 'selected' : ''}>High</option>
+                        <option value="Medium" ${item.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                        <option value="Low" ${item.priority === 'Low' ? 'selected' : ''}>Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="date" id="inp-deadline" required value="${item.deadline || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="inp-status">
+                        <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Proses" ${item.status === 'Proses' ? 'selected' : ''}>Proses</option>
+                        <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                    </select>
+                </div>
+            `;
+        } else if (type === 'report') {
+            fields = `
+                <div class="form-group">
+                    <label>Nama Laporan</label>
+                    <input type="text" id="inp-name" required value="${escapeHtml(item.name || '')}">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="inp-desc" required rows="3">${escapeHtml(item.desc || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="date" id="inp-deadline" required value="${item.deadline || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="inp-status">
+                        <option value="Draft" ${item.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                        <option value="Terkirim" ${item.status === 'Terkirim' ? 'selected' : ''}>Terkirim</option>
+                    </select>
+                </div>
+            `;
+        }
+        document.getElementById('form-fields').innerHTML = fields;
+    }
+
+    function closeModal() { document.getElementById('modal-form').classList.add('hidden'); }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const type = document.getElementById('form-type').value;
+        const id = document.getElementById('form-id').value;
+        const submitBtn = document.getElementById('btn-submit-modal');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Menyimpan...';
+        try {
+            let payload = {};
+            let endpoint = `/api/${type}s`;
+            let method = id ? 'PUT' : 'POST';
+            if (id) endpoint += `/${id}`;
+            if (type === 'task') {
+                payload = {
+                    name: document.getElementById('inp-name').value.trim(),
+                    desc: document.getElementById('inp-desc').value.trim(),
+                    category: document.getElementById('inp-category')?.value.trim(),
+                    priority: document.getElementById('inp-priority')?.value,
+                    deadline: document.getElementById('inp-deadline').value,
+                    status: document.getElementById('inp-status').value
+                };
+            } else if (type === 'report') {
+                payload = {
+                    name: document.getElementById('inp-name').value.trim(),
+                    desc: document.getElementById('inp-desc').value.trim(),
+                    deadline: document.getElementById('inp-deadline').value,
+                    status: document.getElementById('inp-status').value
+                };
+            }
+            const res = await apiFetch(endpoint, { method, body: JSON.stringify(payload) });
+            showToast(res.message || 'Data berhasil disimpan!', 'success');
+            closeModal();
+            if (type === 'task') await refreshCurrentTaskView();
+            if (type === 'report' && currentTab === 'reports') await renderReportsPage();
+        } catch (err) { showToast(err.message, 'error'); }
+        finally { submitBtn.disabled = false; submitBtn.innerText = 'Simpan'; }
+    }
+
+    async function deleteTask(id) {
+        if (!confirm('Hapus tugas ini permanen?')) return;
+        try {
+            const res = await apiFetch('/api/tasks/' + id, { method: 'DELETE' });
+            showToast(res.message || 'Tugas berhasil dihapus.', 'success');
+            await refreshCurrentTaskView();
+        } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function renderTasksTable() {
+        if (!currentUser) return;
+        const search = document.getElementById('search-tasks')?.value || '';
+        const status = document.getElementById('filter-task-status')?.value || '';
+        try {
+            const query = new URLSearchParams({ search, status }).toString();
+            const res = await apiFetch('/api/tasks?' + query);
+            cacheData.tasks = res.tasks || [];
+            const tbody = document.getElementById('tasks-table-body');
+            tbody.innerHTML = '';
+            if (!res.tasks || res.tasks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);padding:32px;">Tidak ada tugas ditemukan.</td></tr>';
+                return;
+            }
+            res.tasks.forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td style="font-weight:600;color:#fff;">${escapeHtml(t.name)}</td>
+                        <td style="color:var(--text-secondary);font-size:13px;">${escapeHtml(t.desc || '')}</td>
+                        <td><span class="category-chip">${escapeHtml(t.category || 'Umum')}</span></td>
+                        <td class="font-mono text-xs" style="color:var(--text-secondary);font-size:13px;">${t.deadline || '—'}</td>
+                        <td style="white-space:nowrap;"><span class="chip chip-status-${t.status === 'Selesai' ? 'done' : t.status === 'Proses' ? 'in-progress' : 'pending'}">${t.status || 'Pending'}</span></td>
+                        <td style="white-space:nowrap;"><span class="chip chip-priority-${(t.priority||'Medium').toLowerCase()}">${t.priority||'Medium'}</span></td>
+                        <td style="text-align:right;">
+                            <button onclick="openModal('task','edit',${t.id})" class="text-emerald-400 hover:text-emerald-300 text-sm font-semibold mr-2">Edit</button>
+                            <button onclick="deleteTask(${t.id})" class="text-red-400 hover:text-red-300 text-sm font-semibold">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) { document.getElementById('tasks-table-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#FCA5A5;padding:32px;">Gagal memuat tugas: ' + escapeHtml(err.message) + '</td></tr>'; }
+    }
+
+    let currentCalendarMonth = new Date();
+    let currentCalendarYear = currentCalendarMonth.getFullYear();
+    let currentCalendarMonthIndex = currentCalendarMonth.getMonth();
+    let selectedCalendarDate = [
+        currentCalendarYear,
+        String(currentCalendarMonthIndex + 1).padStart(2, '0'),
+        String(currentCalendarMonth.getDate()).padStart(2, '0'),
+    ].join('-');
+
+    async function renderCalendar() {
+        if (!currentUser) return;
+        try {
+            const res = await apiFetch('/api/tasks');
+            cacheData.tasks = res.tasks || [];
+            const monthLabel = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' })
+                .format(new Date(currentCalendarYear, currentCalendarMonthIndex, 1));
+            const firstDay = (new Date(currentCalendarYear, currentCalendarMonthIndex, 1).getDay() + 6) % 7;
+            const weekdayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+                .map(day => `<span class="cal-day-label">${day}</span>`).join('');
+            let days = '';
+
+            for (let index = 0; index < 42; index++) {
+                const date = new Date(currentCalendarYear, currentCalendarMonthIndex, index - firstDay + 1);
+                const dateStr = [
+                    date.getFullYear(),
+                    String(date.getMonth() + 1).padStart(2, '0'),
+                    String(date.getDate()).padStart(2, '0'),
+                ].join('-');
+                const count = cacheData.tasks.filter(task => task.deadline === dateStr).length;
+                const isToday = dateStr === [
+                    new Date().getFullYear(),
+                    String(new Date().getMonth() + 1).padStart(2, '0'),
+                    String(new Date().getDate()).padStart(2, '0'),
+                ].join('-');
+                const classes = [
+                    'cal-day',
+                    date.getMonth() !== currentCalendarMonthIndex ? 'other-month' : '',
+                    isToday ? 'today' : '',
+                    count ? 'task-day' : '',
+                    selectedCalendarDate === dateStr ? 'selected' : '',
+                ].filter(Boolean).join(' ');
+                const taskLabel = count ? `${count} tugas` : 'Tidak ada tugas';
+                days += `<button type="button" class="${classes}" aria-label="${date.getDate()} ${monthLabel}, ${taskLabel}" onclick="goToDate('${dateStr}')"><span class="day-num">${date.getDate()}</span>${count ? `<span class="day-dot">${count}</span>` : ''}</button>`;
+            }
+
+            document.querySelectorAll('#calendar-grid, #calendar-grid2').forEach(grid => {
+                grid.innerHTML = weekdayLabels + days;
+            });
+            document.querySelectorAll('#calendar-month, #calendar-month2').forEach(label => label.innerText = monthLabel);
+            renderCalendarTaskList();
+        } catch (err) { showToast('Gagal memuat kalender: ' + err.message, 'error'); }
+    }
+
+    function prevMonth() {
+        currentCalendarMonthIndex--;
+        if (currentCalendarMonthIndex < 0) { currentCalendarMonthIndex = 11; currentCalendarYear--; }
+        renderCalendar();
+    }
+    function nextMonth() {
+        currentCalendarMonthIndex++;
+        if (currentCalendarMonthIndex > 11) { currentCalendarMonthIndex = 0; currentCalendarYear++; }
+        renderCalendar();
+    }
+    function goToDate(dateStr) {
+        selectedCalendarDate = dateStr;
+        renderCalendar();
+    }
+
+    function renderCalendarTaskList() {
+        const container = document.getElementById('calendar-task-list');
+        if (!container) return;
+        const dateLabel = new Intl.DateTimeFormat('id-ID', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        }).format(new Date(`${selectedCalendarDate}T00:00:00`));
+        const tasks = (cacheData.tasks || []).filter(task => task.deadline === selectedCalendarDate);
+        const taskList = tasks.length
+            ? tasks.map(task => `<button type="button" class="calendar-task-item" onclick="openModal('task','edit',${task.id})">
+                <span class="calendar-task-dot"></span>
+                <span><strong>${escapeHtml(task.name)}</strong><small>${escapeHtml(task.status)} · ${escapeHtml(task.category || 'Umum')}</small></span>
+                <span class="material-icons-round">chevron_right</span>
+            </button>`).join('')
+            : '<p class="muted-copy">Tidak ada deadline pada tanggal ini.</p>';
+        container.innerHTML = `<div class="calendar-list-heading">
+            <div><h3>${dateLabel}</h3><span>${tasks.length} tugas</span></div>
+            <button type="button" class="btn-secondary" onclick="createTaskForSelectedDate()"><span class="material-icons-round">add</span>Tambah tugas</button>
+        </div>${taskList}`;
+    }
+
+    function createTaskForSelectedDate() {
+        openModal('task', 'create');
+        document.getElementById('inp-deadline').value = selectedCalendarDate;
+    }
+
+    async function renderReportsPage() {
+        if (!currentUser) return;
+        try {
+            const [taskResponse, reportResponse] = await Promise.all([
+                apiFetch('/api/tasks'),
+                apiFetch('/api/reports'),
+            ]);
+            const tasks = taskResponse.tasks || [];
+            cacheData.tasks = tasks;
+            cacheData.reports = reportResponse.reports || [];
+            const completed = tasks.filter(t => t.status === 'Selesai').length;
+            const inProgress = tasks.filter(t => t.status === 'Proses').length;
+            const pending = tasks.filter(t => t.status === 'Pending').length;
+            const total = tasks.length;
+            const overdue = tasks.filter(t => new Date(`${t.deadline}T23:59:59`) < new Date() && t.status !== 'Selesai').length;
+            const thisWeek = tasks.filter(t => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const d = new Date(`${t.deadline}T00:00:00`);
+                const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+                return diff >= 0 && diff <= 7;
+            }).length;
+            document.getElementById('report-total').innerText = total;
+            document.getElementById('report-completed').innerText = completed;
+            document.getElementById('report-in-progress').innerText = inProgress;
+            document.getElementById('report-pending').innerText = pending;
+            document.getElementById('report-total2').innerText = total;
+            document.getElementById('report-completed2').innerText = completed;
+            document.getElementById('report-in-progress2').innerText = inProgress;
+            document.getElementById('report-pending2').innerText = pending;
+            document.getElementById('report-overdue').innerText = overdue;
+            document.getElementById('report-overdue2').innerText = overdue;
+            document.getElementById('report-this-week').innerText = thisWeek;
+            document.getElementById('report-this-week2').innerText = thisWeek;
+            document.getElementById('report-high').innerText = tasks.filter(t => t.priority === 'High').length;
+            document.getElementById('report-medium').innerText = tasks.filter(t => t.priority === 'Medium').length;
+            document.getElementById('report-low').innerText = tasks.filter(t => t.priority === 'Low').length;
+            const deadlines = tasks.map(task => new Date(`${task.deadline}T00:00:00`).getTime()).filter(Number.isFinite);
+            const averageDeadline = deadlines.length
+                ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(deadlines.reduce((sum, value) => sum + value, 0) / deadlines.length))
+                : '-';
+            document.getElementById('report-avg-deadline').innerText = averageDeadline;
+            document.getElementById('report-avg-deadline2').innerText = averageDeadline;
+            renderReportsList();
+        } catch (err) { showToast('Gagal memuat laporan: ' + err.message, 'error'); }
+    }
+
+    function renderReportsList() {
+        const container = document.getElementById('reports-list');
+        if (!cacheData.reports.length) {
+            container.innerHTML = '<p class="muted-copy">Belum ada laporan tersimpan. Buat laporan untuk mulai mencatat perkembangan.</p>';
+            return;
+        }
+        container.innerHTML = cacheData.reports.map(report => `<article class="saved-report">
+            <div class="saved-report-icon"><span class="material-icons-round">description</span></div>
+            <div class="saved-report-content">
+                <strong>${escapeHtml(report.name)}</strong>
+                <span>${escapeHtml(report.desc || 'Tanpa deskripsi')}</span>
+                <small>Deadline ${escapeHtml(report.deadline || '—')} · ${escapeHtml(report.status || 'Draft')}</small>
+            </div>
+            <div class="saved-report-actions">
+                <button type="button" aria-label="Edit laporan ${escapeHtml(report.name)}" onclick="openModal('report','edit',${report.id})"><span class="material-icons-round">edit</span></button>
+                <button type="button" aria-label="Hapus laporan ${escapeHtml(report.name)}" onclick="deleteReport(${report.id})"><span class="material-icons-round">delete</span></button>
+            </div>
+        </article>`).join('');
+    }
+
+    async function deleteReport(id) {
+        if (!confirm('Hapus laporan ini?')) return;
+        try {
+            const response = await apiFetch(`/api/reports/${id}`, { method: 'DELETE' });
+            showToast(response.message || 'Laporan berhasil dihapus.', 'success');
+            await renderReportsPage();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    function renderSettings() {
+        document.getElementById('setting-name').value = currentUser ? currentUser.name : '';
+        document.getElementById('setting-email').value = currentUser ? currentUser.email : '';
+        checkNeonStatus();
+    }
+
+    async function saveProfile(event) {
+        event.preventDefault();
+        const payload = {
+            name: document.getElementById('setting-name').value.trim(),
+            email: document.getElementById('setting-email').value.trim(),
+        };
+        const password = document.getElementById('setting-password').value;
+        if (password) payload.password = password;
+
+        try {
+            const response = await apiFetch('/api/auth/me', {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+            });
+            currentUser = response.user;
+            authToken = response.token || authToken;
+            if (authToken) localStorage.setItem('auth_token', authToken);
+            document.getElementById('setting-password').value = '';
+            updateAuthUI();
+            showToast(response.message || 'Profil berhasil diperbarui.', 'success');
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    function updateStandaloneBanner() {
+        const banner = document.getElementById('standalone-banner');
+        if (banner) { banner.classList.toggle('hidden', !isStandaloneMode); }
+    }
+
+    async function checkNeonStatus() {
+        const dot = document.getElementById('db-indicator');
+        const text = document.getElementById('db-status-text');
+        try {
+            const res = await fetch(apiBaseUrl + '/api/health');
+            const data = await res.json();
+            isStandaloneMode = false;
+            updateStandaloneBanner();
+            if (data.database && data.database.connected) {
+                dot.className = 'material-icons-round text-emerald-400 text-xl';
+                text.style.color = '#6EE7B7';
+                text.innerText = 'Neon DB: Terhubung (' + (data.database.latency || 'OK') + ')';
+            } else {
+                dot.className = 'material-icons-round text-amber-400 text-xl';
+                text.style.color = '#FCD34D';
+                text.innerText = 'Neon DB: Standby (Local Fallback)';
+            }
+        } catch (err) {
+            isStandaloneMode = true;
+            updateStandaloneBanner();
+            dot.className = 'material-icons-round text-cyan-400 text-xl';
+            text.style.color = '#93C5FD';
+            text.innerText = 'Mode Lokal (Offline)';
+        }
+    }
+
+    function toggleLoginPassword() {
+        const input = document.getElementById('login-password');
+        const icon = document.querySelector('#login-screen .toggle-password .material-icons-round');
+        if (input.type === 'password') { input.type = 'text'; icon.innerText = 'visibility_off'; }
+        else { input.type = 'password'; icon.innerText = 'visibility'; }
+    }
+
+    function switchAuthMode(mode) {
+        const loginContainer = document.getElementById('login-form-container');
+        const registerContainer = document.getElementById('register-form-container');
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        if (mode === 'register') {
+            loginContainer.classList.add('hidden');
+            registerContainer.classList.remove('hidden');
+            loginTab.classList.remove('active');
+            registerTab.classList.add('active');
+            document.getElementById('register-error').style.display = 'none';
+            document.getElementById('reg-name').focus();
+        } else {
+            loginContainer.classList.remove('hidden');
+            registerContainer.classList.add('hidden');
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('login-email').focus();
+        }
+    }
+
+    function autoLogin(email, password) {
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = password;
+        document.getElementById('login-form').dispatchEvent(new Event('submit'));
+    }
+
+    function enterWorkspace(response) {
+        authToken = response.token;
+        currentUser = response.user;
+        localStorage.setItem('auth_token', authToken);
+        document.getElementById('login-overlay-backdrop').classList.add('hidden');
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+        document.getElementById('app-container').style.display = 'flex';
+        updateAuthUI();
+        switchTab('dashboard');
+        checkNeonStatus();
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-password').value;
+        const submitBtn = document.getElementById('login-submit');
+        const errorMsg = document.getElementById('login-error');
+        errorMsg.style.display = 'none';
+        if (!email || !pass) { errorMsg.style.display = 'block'; errorMsg.innerText = 'Email dan kata sandi wajib diisi!'; return; }
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        try {
+            const res = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password: pass }) });
+            if (res.twofactor) {
+                // 2FA required - show 2FA form
+                twofaToken = res.token;
+                twofaUser = res.user;
+                twofaSection.classList.remove('hidden');
+                twofaCode.focus();
+                loginSubmit.disabled = false;
+                loginSubmit.innerText = 'Masuk';
+                loginError.style.display = 'none';
+                return;
+            }
+            enterWorkspace(res);
+            showToast(res.message || 'Berhasil masuk!', 'success');
+        } catch (err) {
+            errorMsg.style.display = 'block';
+            errorMsg.innerText = err.message || 'Login gagal.';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+        }
+    }
+
+    async function handleRegister(event) {
+        event.preventDefault();
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const submitButton = document.getElementById('register-submit');
+        const error = document.getElementById('register-error');
+        error.style.display = 'none';
+        if (name.length < 2 || !email || password.length < 3) {
+            error.innerText = 'Nama minimal 2 karakter, email harus valid, dan kata sandi minimal 3 karakter.';
+            error.style.display = 'block';
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.classList.add('loading');
+        try {
+            const response = await apiFetch('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ name, email, password }),
+            });
+            enterWorkspace(response);
+            showToast(response.message || 'Registrasi berhasil.', 'success');
+        } catch (err) {
+            error.innerText = err.message || 'Registrasi gagal.';
+            error.style.display = 'block';
+        } finally {
+            submitButton.disabled = false;
+            submitButton.classList.remove('loading');
+        }
+    }
+
+    // ===== Toggle halaman luar (landing) & dalam (login) =====
+    function openLogin() {
+        document.getElementById('landing').style.display = 'none';
+        document.getElementById('landing-overlay').style.display = 'block';
+        document.getElementById('login-overlay-backdrop').classList.remove('hidden');
+        const loginScreen = document.getElementById('login-screen');
+        loginScreen.classList.remove('hidden');
+        loginScreen.style.display = 'block';
+    }
+
+    function openRegister() {
+        openLogin();
+        switchAuthMode('register');
+    }
+
+    function closeLogin() {
+        const loginScreen = document.getElementById('login-screen');
+        loginScreen.classList.add('hidden');
+        loginScreen.style.display = 'none';
+        document.getElementById('login-overlay-backdrop').classList.add('hidden');
+        document.getElementById('landing').style.display = 'block';
+        document.getElementById('landing-overlay').style.display = 'none';
+    }
+
+    function handleLogout(notify = true) {
+        authToken = null;
+        currentUser = null;
+        localStorage.removeItem('auth_token');
+        document.getElementById('app-container').classList.add('hidden');
+        document.getElementById('app-container').style.display = 'none';
+        openLogin();
+        if (notify) showToast('Anda telah keluar.', 'info');
+        switchTab('dashboard');
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const mainContent = document.getElementById('main-content');
+        if (window.innerWidth > 1024) {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            return;
+        }
+        const isOpen = sidebar.classList.contains('open');
+        sidebar.classList.toggle('open', !isOpen);
+        overlay.classList.toggle('active', !isOpen);
+    }
+    document.getElementById('sidebar-overlay').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('active');
+        document.getElementById('main-content').classList.remove('expanded');
+    });
+
+    window.onload = async function() {
+        checkNeonStatus();
+        if (authToken) {
+            try { const res = await apiFetch('/api/auth/me'); currentUser = res.user; } catch (e) { authToken = null; localStorage.removeItem('auth_token'); }
+        }
+        updateAuthUI();
+        if (currentUser) {
+            document.getElementById('login-overlay-backdrop').classList.add('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('landing-overlay').style.display = 'none';
+            document.getElementById('app-container').classList.remove('hidden');
+            document.getElementById('app-container').style.display = 'flex';
+        } else {
+            document.getElementById('login-overlay-backdrop').classList.add('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('landing').style.display = 'block';
+            document.getElementById('landing-overlay').style.display = 'none';
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('app-container').style.display = 'none';
+        }
+        switchTab('dashboard');
+        setInterval(checkNeonStatus, 30000);
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('register-form').addEventListener('submit', handleRegister);
+    };
+
+    function showQuickHelp() {
+      showToast('Tambah tugas melalui tombol +, ubah status dengan dropdown atau seret kartu, lalu pantau deadline di Kalender dan progres di Laporan.', 'info');
+    }
+</script>
+</body>
+</html>

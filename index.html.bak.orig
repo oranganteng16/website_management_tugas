@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Manajemen Tugas - Neon PostgreSQL</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Font Inter & Google Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <!-- Custom Style Modern Dark Mode -->
+    <style>
+        body {
+            background-color: #0a0a0f !important;
+            background-image:
+                radial-gradient(ellipse 60% 50% at 10% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 90% 20%, rgba(16, 185, 129, 0.10) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 30% at 80% 90%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 30% 25% at 15% 85%, rgba(245, 158, 11, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 20% 20% at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+            color: #f8fafc !important;
+            font-family: 'Inter', sans-serif;
+        }
+        /* --- Colorful Stat Cards --- */
+        .stat-card {
+            background: linear-gradient(135deg, #1e1b2e 0%, #1a1628 100%);
+            border-color: #2a2440;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5);
+        }
+        .stat-card-users { border-top: 3px solid #2563eb; }
+        .stat-card-users .icon-ring { border-color: #2563eb; box-shadow: 0 0 12px rgba(37, 99, 235, 0.35); }
+        .stat-card-tasks { border-top: 3px solid #10b981; }
+        .stat-card-tasks .icon-ring { border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.35); }
+        .stat-card-reports { border-top: 3px solid #8b5cf6; }
+        .stat-card-reports .icon-ring { border-color: #8b5cf6; box-shadow: 0 0 12px rgba(139, 92, 246, 0.35); }
+        .stat-card-reminders { border-top: 3px solid #f59e0b; }
+        .stat-card-reminders .icon-ring { border-color: #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.35); }
+        .stat-card .icon-ring {
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .stat-card:hover .icon-ring {
+            transform: scale(1.06);
+        }
+        .stat-card .stat-value {
+            background: linear-gradient(135deg, var(--stat-color) 0%, var(--stat-color-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+        }
+        .stat-card .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #f8fafc;
+            line-height: 1.2;
+        }
+        /* --- Colorful Status Badges --- */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            border: 1px solid;
+        }
+        .badge-status::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        .badge-pending { background: #f59e0b18; color: #f59e0b; border-color: #f59e0b30; }
+        .badge-pending::before { box-shadow: 0 0 6px rgba(245, 158, 11, 0.6); }
+        .badge-proses { background: #3b82f618; color: #3b82f6; border-color: #3b82f630; }
+        .badge-proses::before { box-shadow: 0 0 6px rgba(59, 130, 246, 0.6); }
+        .badge-selesai { background: #10b98118; color: #10b981; border-color: #10b98130; }
+        .badge-selesai::before { box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); }
+        .badge-draft { background: #8b5cf618; color: #8b5cf6; border-color: #8b5cf630; }
+        .badge-draft::before { box-shadow: 0 0 6px rgba(139, 92, 246, 0.6); }
+        .badge-terkirim { background: #a78bfa18; color: #a78bfa; border-color: #a78bfa30; }
+        .badge-terkirim::before { box-shadow: 0 0 6px rgba(167, 139, 250, 0.6); }
+        .badge-aktif { background: #3b82f618; color: #3b82f6; border-color: #3b82f630; }
+        .badge-aktif::before { box-shadow: 0 0 6px rgba(59, 130, 246, 0.6); }
+        .badge-selesai-reminder { background: #10b98118; color: #10b981; border-color: #10b98130; }
+        .badge-selesai-reminder::before { box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        aside, header, .bg-card, #modal-form > div, #modal-db-guide > div {
+            background-color: #0b0f19 !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        h1, h2, h3, h4, h5, h6, p, span, label, th, td {
+            color: #f8fafc !important;
+        }
+        .text-gray-500, .text-gray-600, .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+        /* Navigasi Aktif yang Menarik & Elegan */
+        #nav-dashboard.active-nav, [id^="nav-"].active-nav, button[id^="nav-"]:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        #nav-dashboard span, nav button span {
+            color: inherit !important;
+        }
+        input, select, textarea {
+            background-color: #111827 !important;
+            border-color: #374151 !important;
+            color: #ffffff !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        input::placeholder, textarea::placeholder {
+            color: #6b7280 !important;
+        }
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        tbody tr:hover {
+            background-color: rgba(30, 41, 59, 0.5) !important;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        /* Toast notification */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        
+        
+        /* --- Kanban Login Screen --- */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+        #login-screen.hidden {
+            display: none;
+        }
+        
+        .login-layout {
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            display: flex;
+            gap: 0;
+            background: #0F172A;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* Left Panel - Branding + Kanban Board */
+        .login-left {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem;
+            background: #0F172A;
+            color: #F8FAFC;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .login-left .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-left .logo .logo-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+        }
+        .login-left .logo .logo-icon span {
+            font-size: 24px;
+            color: white;
+        }
+        .login-left .logo h1 {
+            color: #F8FAFC;
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .login-left .logo p {
+            color: #94A3B8;
+            font-size: 0.85rem;
+            max-width: 280px;
+        }
+        
+        /* Kanban Board */
+        .kanban-board {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-top: 1rem;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 0;
+        }
+        /* --- Colorful Kanban Board Columns --- */
+        .kanban-column {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .kanban-column:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .kanban-column .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .kanban-column .column-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94A3B8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .kanban-column .column-title::after {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            border-radius: 2px;
+            background: currentColor;
+        }
+        .kanban-column .column-title .count {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94A3B8;
+        }
+        .kanban-column.in-progress .column-title {
+            color: #3B82F6;
+        }
+        .kanban-column.in-progress .column-title::after {
+            background: #3B82F6;
+        }
+        .kanban-column.done .column-title {
+            color: #10B981;
+        }
+        .kanban-column.done .column-title::after {
+            background: #10B981;
+        }
+        .kanban-column.todo .column-title {
+            color: #F59E0B;
+        }
+        .kanban-column.todo .column-title::after {
+            background: #F59E0B;
+        }
+        
+        /* Kanban Cards */
+        .kanban-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0.75rem;
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .kanban-card:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(4px);
+        }
+        .kanban-card .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .kanban-card .card-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #F8FAFC;
+            line-height: 1.3;
+        }
+        .kanban-card .card-desc {
+            font-size: 0.7rem;
+            color: #64748B;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .kanban-card .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .kanban-card .card-meta-left {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .kanban-card .card-meta-right {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        /* Priority Badges */
+        .priority {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .priority.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #FCA5A5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .priority.medium {
+            background: rgba(234, 179, 8, 0.2);
+            color: #FCD34D;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        .priority.low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6EE7B7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .deadline {
+            font-size: 0.65rem;
+            color: #64748B;
+            font-family: 'monospace';
+            font-weight: 600;
+        }
+        
+        .kanban-column.in-progress .kanban-card {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.08);
+        }
+        .kanban-column.done .kanban-card {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .kanban-column.done .kanban-card.done-card {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress {
+            height: 100%;
+            border-radius: 4px;
+            background: #3B82F6;
+            transition: width 0.3s ease;
+        }
+        
+        /* Right Panel - Login Card */
+        .login-right {
+            flex: 0.8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            background: #0F172A;
+        }
+        .login-right .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        .login-right .login-card .logo {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .login-right .login-card .logo .logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.6rem;
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+        }
+        .login-right .login-card .logo .logo-icon span {
+            font-size: 20px;
+            color: white;
+        }
+        .login-right .login-card .logo h1 {
+            color: #F8FAFC;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .login-right .login-card .logo p {
+            color: #94A3B8;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+        .login-right .login-card .form-group {
+            margin-bottom: 1rem;
+        }
+        .login-right .login-card .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .login-right .login-card .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.06);
+            color: #F8FAFC;
+            font-size: 0.85rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .login-right .login-card .form-group input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        .login-right .login-card .form-group input::placeholder {
+            color: #475569;
+        }
+        .login-right .login-card .form-group .input-wrapper {
+            position: relative;
+        }
+        .login-right .login-card .form-group .input-wrapper .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748B;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        .login-right .login-card .form-group .input-wrapper .toggle-password:hover {
+            color: #F8FAFC;
+        }
+        .login-right .login-card .form-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+            color: #94A3B8;
+        }
+        .login-right .login-card .form-options input[type="checkbox"] {
+            accent-color: #3B82F6;
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+        }
+        .login-right .login-card .form-options a {
+            color: #3B82F6;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .login-right .login-card .form-options a:hover {
+            color: #6366F1;
+            text-decoration: underline;
+        }
+        .login-right .login-card .btn-login {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        }
+        .login-right .login-card .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.45);
+        }
+        .login-right .login-card .btn-login:active {
+            transform: translateY(0);
+        }
+        .login-right .login-card .btn-login.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .login-right .login-card .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        .login-right .login-card .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #FCA5A5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: none;
+            margin-top: 12px;
+        }
+        .login-right .login-card .error-msg.visible {
+            display: block;
+        }
+        .login-right .login-card .auth-links {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+        }
+        .login-right .login-card .auth-links p {
+            color: #64748B;
+            margin-bottom: 4px;
+        }
+        .login-right .login-card .auth-links a {
+            color: #3B82F6;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .login-right .login-card .auth-links a:hover {
+            color: #6366F1;
+            text-decoration: underline;
+        }
+        
+        
+        }
+}
+    
+        /* --- Responsive Design --- */
+        @media (max-width: 1024px) {
+            .login-layout {
+                flex-direction: column;
+                height: auto;
+                padding: 1.5rem;
+            }
+            .login-left {
+                flex: none;
+                padding: 1.5rem;
+                overflow-y: auto;
+            }
+            .kanban-board {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .kanban-column {
+                min-width: 100%;
+                max-width: 100%;
+                flex: none;
+            }
+            .kanban-column .card-count {
+                font-size: 0.8rem;
+            }
+            .kanban-card .card-desc {
+                -webkit-line-clamp: 2;
+            }
+            .login-right {
+                flex: none;
+                padding: 1.5rem;
+            }
+            .login-right .login-card {
+                max-width: 100%;
+            }
+        }
+        @media (max-width: 640px) {
+            .login-screen {
+                padding: 1rem;
+            }
+            .login-layout {
+                border-radius: 12px;
+            }
+            .login-left {
+                padding: 1.25rem;
+            }
+            .login-right {
+                padding: 1.25rem;
+            }
+            .login-right .login-card {
+                padding: 1.5rem;
+            }
+            .login-left .logo h1 {
+                font-size: 1.1rem;
+            }
+            .login-left .logo p {
+                font-size: 0.75rem;
+                max-width: 200px;
+            }
+            .kanban-column {
+                padding: 0.75rem;
+            }
+            .kanban-column .column-title {
+                font-size: 0.65rem;
+            }
+            .kanban-column .card-count {
+                font-size: 0.7rem;
+                padding: 1px 6px;
+            }
+            .kanban-card {
+                padding: 0.6rem;
+            }
+            .kanban-card .card-title {
+                font-size: 0.75rem;
+            }
+            .kanban-card .card-desc {
+                font-size: 0.65rem;
+            }
+            .kanban-card .card-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+            .kanban-card .card-meta .priority {
+                font-size: 0.6rem;
+                padding: 1px 4px;
+            }
+            .kanban-card .card-meta .deadline {
+                font-size: 0.6rem;
+            }
+            .login-right .login-card .form-group input {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            .login-right .login-card .btn-login {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+            .login-right .login-card .logo .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+            .login-right .login-card .logo .logo-icon span {
+                font-size: 16px;
+            }
+            .login-right .login-card .logo h1 {
+                font-size: 1.1rem;
+            }
+            .kanban-board {
+                gap: 0.75rem;
+            }
+        }
+</style>
+</head>
+<body class="antialiased selection:bg-blue-600 selection:text-white">
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <!-- ================= LOGIN SCREEN ================= -->
+    <div id="login-overlay-backdrop"></div>
+    <div id="login-screen" class="hidden" role="dialog" aria-modal="true" aria-label="Login">
+        <div class="login-layout">
+            <!-- Left: Branding + Kanban Board (desktop) -->
+            <div class="login-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <span class="material-icons-round">task_alt</span>
+                    </div>
+                    <h1>Manage Your Tasks Smarter</h1>
+                    <p>Kelola tugas dengan lebih cerdas, ringkas, dan teratur</p>
+                </div>
+
+                <div class="kanban-board">
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <span class="column-title">To Do</span>
+                            <span class="card-count">2</span>
+                        </div>
+                        <div class="kanban-cards">
+                            <div class="kanban-card">
+                                <div class="card-body">
+                                    <p class="card-title">Setup Repository Git & Neon DB</p>
+                                    <p class="card-desc">Inisialisasi database Neon dan backend production</p>
+                                    <div class="card-meta">
+                                        <span class="priority high">High</span>
+                                        <span class="deadline">2026-06-10</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="kanban-card">
+                                <div class="card-body">
+                                    <p class="card-title">Membuat Desain UI/UX</p>
+                                    <p class="card-desc">Menyelesaikan halaman dashboard dan tabel</p>
+                                    <div class="card-meta">
+                                        <span class="priority medium">Medium</span>
+                                        <span class="deadline">2026-06-15</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-column in-progress">
+                        <div class="column-header">
+                            <span class="column-title">In Progress</span>
+                            <span class="card-count">1</span>
+                        </div>
+                        <div class="kanban-cards">
+                            <div class="kanban-card">
+                                <div class="card-body">
+                                    <p class="card-title">Optimasi Keamanan & Deployment</p>
+                                    <p class="card-desc">Implementasi JWT, bcrypt, helmet, rate limiting, dan CORS</p>
+                                    <div class="card-meta">
+                                        <span class="priority low">Low</span>
+                                        <span class="deadline">2026-06-20</span>
+                                    </div>
+                                </div>
+                                <div class="progress-bar"><div class="progress" style="width: 50%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-column done">
+                        <div class="column-header">
+                            <span class="column-title">Done</span>
+                            <span class="card-count">1</span>
+                        </div>
+                        <div class="kanban-cards">
+                            <div class="kanban-card done-card">
+                                <div class="card-body">
+                                    <p class="card-title">Laporan Evaluasi Sprint</p>
+                                    <p class="card-desc">Analisis performa server dan koneksi database pooler</p>
+                                    <div class="card-meta">
+                                        <span class="priority medium">Medium</span>
+                                        <span class="deadline">2026-06-25</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Login Card (desktop) -->
+            <div class="login-right">
+                <div class="login-card">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <span class="material-icons-round">task_alt</span>
+                        </div>
+                        <h1>Manajemen Tugas</h1>
+                        <p>Silakan masuk untuk melanjutkan</p>
+                    </div>
+
+                    <div id="login-error" class="error-msg"></div>
+
+                    <form id="login-form" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="login-email">Email atau Username</label>
+                            <div class="input-wrapper">
+                                <input
+                                    type="email"
+                                    id="login-email"
+                                    placeholder="masuk@app.com"
+                                    autocomplete="email"
+                                    required
+                                    autofocus
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="login-password">Kata Sandi</label>
+                            <div class="input-wrapper">
+                                <input
+                                    type="password"
+                                    id="login-password"
+                                    placeholder="Kata sandi Anda"
+                                    autocomplete="current-password"
+                                    required
+                                >
+                                <button
+                                    type="button"
+                                    class="toggle-password"
+                                    onclick="togglePasswordVisibility('login-password')"
+                                    aria-label="Tampilkan kata sandi"
+                                >
+                                    <span class="material-icons-round">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-options">
+                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                                <input type="checkbox" id="login-remember">
+                                Ingat saya
+                            </label>
+                            <a href="#" onclick="event.preventDefault(); document.getElementById('login-email').focus();">Lupa kata sandi?</a>
+                        </div>
+
+                        <button type="submit" class="btn-login" id="login-submit">
+                            <span class="btn-text">Masuk</span>
+                        </button>
+                    </form>
+
+                    <div class="auth-links">
+                        <p>Belum punya akun?</p>
+                        <a href="#" onclick="event.preventDefault(); switchTab('dashboard');">Daftar sebagai pengguna</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+MAIN APP CONTAINER ================= -->
+    <div id="app-container" class="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
+    <!-- ================= LEFT SIDEBAR ================= -->
+    <aside class="w-full md:w-64 lg:w-72 bg-[#1e293b] border-r border-[#334155] flex flex-col shrink-0 z-30 transition-all duration-300">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-between px-5 py-5 border-b border-[#334155]">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <span class="material-icons-round text-xl">task_alt</span>
+                </div>
+                <div>
+                    <h2 class="font-bold text-lg tracking-wide">ManageTugas</h2>
+                    <p class="text-[10px] text-slate-400 -mt-1">Project Board</p>
+                </div>
+            </div>
+            <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white">
+                <span class="material-icons-round text-base">menu</span>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group">
+                <span class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center group-hover:bg-blue-600/30 transition">
+                    <span class="material-icons-round text-sm">dashboard</span>
+                </span>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200 group">
+                <span class="w-8 h-8 rounded-lg bg-slate-700/20 text-slate-400 hover:bg-slate-600/30 transition">
+                    <span class="material-icons-round text-sm">list</span>
+                </span>
+                <span>My Tasks</span>
+            </button>
+            <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200 group">
+                <span class="w-8 h-8 rounded-lg bg-amber-700/20 text-amber-400 hover:bg-amber-600/30 transition">
+                    <span class="material-icons-round text-sm">kanban</span>
+                </span>
+                <span>Kanban Board</span>
+            </button>
+            <button onclick="switchTab('calendar')" id="nav-calendar" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200 group">
+                <span class="w-8 h-8 rounded-lg bg-emerald-700/20 text-emerald-400 hover:bg-emerald-600/30 transition">
+                    <span class="material-icons-round text-sm">calendar_today</span>
+                </span>
+                <span>Calendar</span>
+            </button>
+            <button onclick="switchTab('reports')" id="nav-reports" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200 group">
+                <span class="w-8 h-8 rounded-lg bg-purple-700/20 text-purple-400 hover:bg-purple-600/30 transition">
+                    <span class="material-icons-round text-sm">analytics</span>
+                </span>
+                <span>Reports / Analytics</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200 group">
+                <span class="w-8 h-8 rounded-lg bg-slate-700/20 text-slate-400 hover:bg-slate-600/30 transition">
+                    <span class="material-icons-round text-sm">settings</span>
+                </span>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="px-5 py-5 border-t border-[#334155] space-y-3">
+            <div class="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-slate-800/40 cursor-pointer transition">
+                <div class="w-9 h-9 rounded-xl bg-slate-700/20 text-slate-400 flex items-center justify-center">
+                    <span class="material-icons-round text-sm">person</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="sidebar-user-name" class="text-xs font-bold text-white truncate">User Name</p>
+                    <p id="sidebar-user-email" class="text-[10px] text-slate-400 truncate">user@app.com</p>
+                </div>
+            </div>
+            <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-sm font-semibold text-slate-300 hover:text-red-400 hover:bg-red-500/10 border border-slate-700/80 hover:border-red-500/30 transition">
+                <span class="material-icons-round text-sm">logout</span>
+                <span>Log Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="flex-1 p-6 md:p-8 lg:p-10 overflow-y-auto bg-[#0f172a]">
+        <!-- Header Top -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-[#334155]">
+            <div>
+                <h1 id="page-title" class="text-2xl font-extrabold text-white tracking-tight">Dashboard</h1>
+                <p id="page-desc" class="text-sm text-slate-400 mt-0.5">Ringkasan aktivitas dan statistik terkini</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Search Bar -->
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                        <span class="material-icons-round">search</span>
+                    </span>
+                    <input type="text" id="search-task" oninput="renderKanban()" placeholder="Cari tugas..." class="w-64 pl-10 pr-4 py-2.5 bg-[#334155]/50 border border-[#475569] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition">
+                </div>
+                <!-- New Task Button -->
+                <button onclick="openAddTaskModal()" class="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/25 transition hover:shadow-blue-500/40">
+                    <span class="material-icons-round text-base">add</span>
+                    <span>Tambah Tugas</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-[#1e293b] rounded-2xl border border-[#334155] p-5 shadow-lg hover:shadow-xl transition">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center">
+                        <span class="material-icons-round text-xl">assignment</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Total Tasks</p>
+                        <h3 class="text-2xl font-black text-white" id="stat-total-tasks">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[#1e293b] rounded-2xl border border-[#334155] p-5 shadow-lg hover:shadow-xl transition">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                        <span class="material-icons-round text-xl">check_circle</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Completed</p>
+                        <h3 class="text-2xl font-black text-white" id="stat-completed">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[#1e293b] rounded-2xl border border-[#334155] p-5 shadow-lg hover:shadow-xl transition">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                        <span class="material-icons-round text-xl">schedule</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">In Progress</p>
+                        <h3 class="text-2xl font-black text-white" id="stat-in-progress">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[#1e293b] rounded-2xl border border-[#334155] p-5 shadow-lg hover:shadow-xl transition">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-600/20 border border-red-500/30 text-red-400 flex items-center justify-center">
+                        <span class="material-icons-round text-xl">warning</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Overdue</p>
+                        <h3 class="text-2xl font-black text-white" id="stat-overdue">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kanban Board Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Kanban Board Columns -->
+            <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- To Do Column -->
+                <div class="bg-[#1e293b] rounded-2xl border border-[#334155] shadow-xl overflow-hidden min-h-[400px]">
+                    <div class="px-5 py-4 border-b border-[#334155] flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-[#374151]"></span>
+                            <h3 class="font-bold text-white">To Do</h3>
+                            <span class="text-xs text-slate-400 bg-[#334155] px-2 py-0.5 rounded-full" id="count-todo">0</span>
+                        </div>
+                        <button onclick="moveAllToStatus(0)" class="text-xs text-slate-400 hover:text-white transition">
+                            <span class="material-icons-round">forward_to_queue</span>
+                        </button>
+                    </div>
+                    <div class="p-4 space-y-3" id="kanban-todo">
+                        <!-- Task cards will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- In Progress Column -->
+                <div class="bg-[#1e293b] rounded-2xl border border-[#334155] shadow-xl overflow-hidden min-h-[400px]">
+                    <div class="px-5 py-4 border-b border-[#334155] flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-[#f59e0b]"></span>
+                            <h3 class="font-bold text-white">In Progress</h3>
+                            <span class="text-xs text-slate-400 bg-[#334155] px-2 py-0.5 rounded-full" id="count-in-progress">0</span>
+                        </div>
+                        <button onclick="moveAllToStatus(1)" class="text-xs text-slate-400 hover:text-white transition">
+                            <span class="material-icons-round">forward_to_queue</span>
+                        </button>
+                    </div>
+                    <div class="p-4 space-y-3" id="kanban-in-progress">
+                        <!-- Task cards will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Done Column -->
+                <div class="bg-[#1e293b] rounded-2xl border border-[#334155] shadow-xl overflow-hidden min-h-[400px]">
+                    <div class="px-5 py-4 border-b border-[#334155] flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-3 h-3 rounded-full bg-[#22c55e]"></span>
+                            <h3 class="font-bold text-white">Done</h3>
+                            <span class="text-xs text-slate-400 bg-[#334155] px-2 py-0.5 rounded-full" id="count-done">0</span>
+                        </div>
+                        <button onclick="moveAllToStatus(2)" class="text-xs text-slate-400 hover:text-white transition">
+                            <span class="material-icons-round">forward</span>
+                        </button>
+                    </div>
+                    <div class="p-4 space-y-3" id="kanban-done">
+                        <!-- Task cards will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar & Reports Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Calendar View -->
+            <div class="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <span class="material-icons-round text-blue-500">calendar_month</span>
+                        Calendar View
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="prevMonth()" class="p-2 bg-[#334155] rounded-lg hover:bg-[#475569] transition">
+                            <span class="material-icons-round">chevron_left</span>
+                        </button>
+                        <span id="calendar-month" class="text-sm font-bold text-white">January 2026</span>
+                        <button onclick="nextMonth()" class="p-2 bg-[#334155] rounded-lg hover:bg-[#475569] transition">
+                            <span class="material-icons-round">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+                    <!-- Calendar days will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Reports / Analytics -->
+            <div class="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <span class="material-icons-round text-purple-500">analytics</span>
+                        Task Completion
+                    </h3>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Status Distribution</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                <span class="text-sm text-slate-300">Selesai</span>
+                                <span id="stat-completed-count" class="text-xs font-bold text-slate-300">0</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                <span class="text-sm text-slate-300">In Progress</span>
+                                <span id="stat-in-progress-count" class="text-xs font-bold text-slate-300">0</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="text-sm text-slate-300">Overdue</span>
+                                <span id="stat-overdue-count" class="text-xs font-bold text-slate-300">0</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-3 h-3 rounded-full bg-slate-600"></span>
+                                <span class="text-sm text-slate-300">Pending</span>
+                                <span id="stat-pending-count" class="text-xs font-bold text-slate-300">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Completion Rate</p>
+                        <div class="bg-[#334155] rounded-xl p-4 mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-300">Progress</span>
+                                <span id="completion-rate" class="text-lg font-bold text-white">0%</span>
+                            </div>
+                            <div class="w-full bg-[#475569] rounded-full h-3">
+                                <div id="completion-bar" class="bg-gradient-to-r from-blue-600 to-indigo-500 h-3 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Quick Stats</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-300">Average Deadline</span>
+                                <span id="avg-deadline" class="text-sm font-bold text-white">-</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-300">Tasks Due This Week</span>
+                                <span id="this-week-deadline" class="text-sm font-bold text-white">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ================= MODAL: Add/Edit Task ================= -->
+<div id="modal-form" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div class="bg-[#1e293b] border border-[#334155] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-[#334155] flex items-center justify-between">
+            <h3 id="modal-title" class="text-lg font-bold text-white">Tambah Task</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                <span class="material-icons-round text-lg">close</span>
+            </button>
+        </div>
+        <div class="px-6 py-4">
+            <form onsubmit="handleFormSubmit(event)">
+                <div id="form-fields">
+                    <!-- Dynamic form fields -->
+                </div>
+                </div>
+                <div class="px-6 py-4 border-t border-[#334155] flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition">Cancel</button>
+                    <button type="submit" id="btn-submit-modal" class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/20 transition">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+        // State Global Aplikasi
+        let currentUser = null;
+        let authToken = localStorage.getItem('auth_token') || null;
+        let currentTab = 'dashboard';
+
+        // Konfigurasi API Base URL & Deteksi Lingkungan
+        const isFileProtocol = window.location.protocol === 'file:';
+        let apiBaseUrl = isFileProtocol ? 'http://localhost:3000' : '';
+        let isStandaloneMode = false;
+
+        // Cache lokal data saat ini
+        let cacheData = {
+            users: [],
+            tasks: [],
+            reports: [],
+            reminders: []
+        };
+
+        // Storage Simulator Lokal jika Backend Offline atau file://
+        const LOCAL_STORAGE_KEY = 'app_local_data';
+        function getLocalStorageData() {
+            const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (raw) {
+                try { return JSON.parse(raw); } catch (e) {}
+            }
+            const initial = {
+                users: [
+                    { id: 1, name: 'Owner System', email: 'owner@app.com', password: '123', role: 'owner' },
+                    { id: 2, name: 'Standard User', email: 'user@app.com', password: '123', role: 'user' }
+                ],
+                tasks: [
+                    { id: 1, name: 'Membuat Desain UI/UX', desc: 'Menyelesaikan halaman dashboard dan tabel', deadline: '2026-06-15', status: 'Proses', userId: 1 },
+                    { id: 2, name: 'Setup Repository Git & Neon DB', desc: 'Inisialisasi database Neon dan backend production', deadline: '2026-06-10', status: 'Selesai', userId: 2 },
+                    { id: 3, name: 'Optimasi Keamanan & Deployment', desc: 'Implementasi JWT, bcrypt, helmet, rate limiting, dan CORS', deadline: '2026-06-20', status: 'Pending', userId: 1 }
+                ],
+                reports: [
+                    { id: 1, name: 'Laporan Harian Kerja', desc: 'Rekapitulasi tugas harian tim dan migrasi database ke Neon', deadline: '2026-06-12', status: 'Draft', userId: 1 },
+                    { id: 2, name: 'Laporan Evaluasi Sprint', desc: 'Analisis performa server dan koneksi database pooler', deadline: '2026-06-25', status: 'Terkirim', userId: 2 }
+                ],
+                reminders: [
+                    { id: 1, name: 'Meeting Evaluasi Mingguan', desc: 'Rapat koordinasi bersama klien dan tim pengembang', deadline: '2026-06-14', status: 'Aktif', userId: 1 },
+                    { id: 2, name: 'Review Security Audit & Backup DB', desc: 'Pengecekan backup rutin database Neon dan verifikasi SSL', deadline: '2026-06-18', status: 'Aktif', userId: 1 }
+                ]
+            };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
+            return initial;
+        }
+
+        function saveLocalStorageData(data) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function updateStandaloneBanner() {
+            const banner = document.getElementById('standalone-banner');
+            if (banner) {
+                if (isStandaloneMode) banner.classList.remove('hidden');
+                else banner.classList.add('hidden');
+            }
+        }
+
+        async function simulateApi(endpoint, options = {}) {
+            const method = (options.method || 'GET').toUpperCase();
+            const body = options.body ? JSON.parse(options.body) : {};
+            const localData = getLocalStorageData();
+            await new Promise(r => setTimeout(r, 60));
+
+            if (endpoint.startsWith('/api/health')) {
+                return {
+                    success: true,
+                    status: 'healthy',
+                    database: {
+                        connected: false,
+                        latency: null,
+                        target: 'Local Browser (Standalone)',
+                        mode: 'Browser Local Storage',
+                        error: 'Backend offline. Buka terminal lalu jalankan `npm run dev`.'
+                    }
+                };
+            }
+
+            if (endpoint === '/api/auth/login' && method === 'POST') {
+                const user = localData.users.find(u => u.email.toLowerCase() === body.email.toLowerCase());
+                if (!user || user.password !== body.password) {
+                    throw new Error('Email atau password salah.');
+                }
+                const { password: _, ...safeUser } = user;
+                return {
+                    success: true,
+                    token: 'standalone-token-' + user.id,
+                    user: safeUser,
+                    message: `Selamat datang kembali, ${user.name}! (Mode Lokal)`
+                };
+            }
+
+            if (endpoint === '/api/auth/me') {
+                if (!currentUser) throw new Error('Unauthorized');
+                return { success: true, user: currentUser };
+            }
+
+            if (endpoint === '/api/dashboard/stats') {
+                const nearestDeadlines = [...localData.tasks]
+                    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+                    .slice(0, 5);
+                return {
+                    success: true,
+                    stats: {
+                        system: {
+                            users: localData.users.length,
+                            tasks: localData.tasks.length,
+                            reports: localData.reports.length,
+                            reminders: localData.reminders.length
+                        },
+                        user: {
+                            tasks: localData.tasks.length,
+                            reports: localData.reports.length,
+                            reminders: localData.reminders.length
+                        },
+                        nearestDeadlines
+                    }
+                };
+            }
+
+            if (endpoint.startsWith('/api/users')) {
+                if (method === 'GET') {
+                    return { success: true, users: localData.users.map(({password, ...u}) => u) };
+                }
+                if (method === 'POST') {
+                    const newId = localData.users.length ? Math.max(...localData.users.map(u => u.id)) + 1 : 1;
+                    const newUser = { id: newId, name: body.name, email: body.email, password: body.password || '123', role: body.role || 'user' };
+                    localData.users.push(newUser);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'User berhasil ditambahkan', user: newUser };
+                }
+                if (method === 'PUT') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    const idx = localData.users.findIndex(u => u.id === id);
+                    if (idx !== -1) {
+                        localData.users[idx] = { ...localData.users[idx], ...body };
+                        saveLocalStorageData(localData);
+                        return { success: true, message: 'User berhasil diperbarui' };
+                    }
+                    throw new Error('User tidak ditemukan');
+                }
+                if (method === 'DELETE') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    localData.users = localData.users.filter(u => u.id !== id);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'User berhasil dihapus' };
+                }
+            }
+
+            if (endpoint.startsWith('/api/tasks')) {
+                if (method === 'GET') {
+                    return { success: true, tasks: localData.tasks };
+                }
+                if (method === 'POST') {
+                    const newId = localData.tasks.length ? Math.max(...localData.tasks.map(t => t.id)) + 1 : 1;
+                    const newTask = { id: newId, ...body };
+                    localData.tasks.push(newTask);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'Task berhasil ditambahkan', task: newTask };
+                }
+                if (method === 'PUT') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    const idx = localData.tasks.findIndex(t => t.id === id);
+                    if (idx !== -1) {
+                        localData.tasks[idx] = { ...localData.tasks[idx], ...body };
+                        saveLocalStorageData(localData);
+                        return { success: true, message: 'Task berhasil diperbarui' };
+                    }
+                    throw new Error('Task tidak ditemukan');
+                }
+                if (method === 'DELETE') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    localData.tasks = localData.tasks.filter(t => t.id !== id);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'Task berhasil dihapus' };
+                }
+            }
+
+            if (endpoint.startsWith('/api/reports')) {
+                if (method === 'GET') {
+                    return { success: true, reports: localData.reports };
+                }
+                if (method === 'POST') {
+                    const newId = localData.reports.length ? Math.max(...localData.reports.map(r => r.id)) + 1 : 1;
+                    const newReport = { id: newId, ...body };
+                    localData.reports.push(newReport);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'Report berhasil ditambahkan', report: newReport };
+                }
+                if (method === 'PUT') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    const idx = localData.reports.findIndex(r => r.id === id);
+                    if (idx !== -1) {
+                        localData.reports[idx] = { ...localData.reports[idx], ...body };
+                        saveLocalStorageData(localData);
+                        return { success: true, message: 'Report berhasil diperbarui' };
+                    }
+                    throw new Error('Report tidak ditemukan');
+                }
+                if (method === 'DELETE') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    localData.reports = localData.reports.filter(r => r.id !== id);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'Report berhasil dihapus' };
+                }
+            }
+
+            if (endpoint.startsWith('/api/reminders')) {
+                if (method === 'GET') {
+                    return { success: true, reminders: localData.reminders };
+                }
+                if (method === 'POST') {
+                    const newId = localData.reminders.length ? Math.max(...localData.reminders.map(rm => rm.id)) + 1 : 1;
+                    const newReminder = { id: newId, ...body };
+                    localData.reminders.push(newReminder);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'Reminder berhasil ditambahkan', reminder: newReminder };
+                }
+                if (method === 'PUT') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    const idx = localData.reminders.findIndex(rm => rm.id === id);
+                    if (idx !== -1) {
+                        localData.reminders[idx] = { ...localData.reminders[idx], ...body };
+                        saveLocalStorageData(localData);
+                        return { success: true, message: 'Reminder berhasil diperbarui' };
+                    }
+                    throw new Error('Reminder tidak ditemukan');
+                }
+                if (method === 'DELETE') {
+                    const id = parseInt(endpoint.split('/').pop(), 10);
+                    localData.reminders = localData.reminders.filter(rm => rm.id !== id);
+                    saveLocalStorageData(localData);
+                    return { success: true, message: 'Reminder berhasil dihapus' };
+                }
+            }
+
+            return { success: true };
+        }
+
+        // Utility: Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClasses = 'bg-slate-900 border-slate-700 text-slate-200';
+            let icon = 'info';
+
+            if (type === 'success') {
+                bgClasses = 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200';
+                icon = 'check_circle';
+            } else if (type === 'error') {
+                bgClasses = 'bg-red-950/90 border-red-500/50 text-red-200';
+                icon = 'error';
+            } else if (type === 'warning') {
+                bgClasses = 'bg-amber-950/90 border-amber-500/50 text-amber-200';
+                icon = 'warning';
+            }
+
+            toast.className = `toast px-4 py-3 rounded-xl border shadow-2xl flex items-center space-x-3 text-xs font-medium backdrop-blur-md ${bgClasses}`;
+            toast.innerHTML = `
+                <span class="material-icons-round text-base">${icon}</span>
+                <span class="flex-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Utility: Fetch API Wrapper dengan Auto Bearer Token & Standalone Resilience
+        async function apiFetch(endpoint, options = {}) {
+            if (isStandaloneMode) {
+                return await simulateApi(endpoint, options);
+            }
+
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            };
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const url = endpoint.startsWith('http') ? endpoint : (apiBaseUrl + endpoint);
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 && !endpoint.includes('/login')) {
+                    handleLogout(false);
+                    showToast('Sesi login telah kedaluwarsa. Silakan masuk kembali.', 'warning');
+                    throw new Error(data.message || 'Unauthorized');
+                }
+
+                if (!response.ok) {
+                    const errorMsg = data.errors ? data.errors.map(e => e.message).join(', ') : (data.message || 'Terjadi kesalahan sistem.');
+                    throw new Error(errorMsg);
+                }
+
+                return data;
+            } catch (err) {
+                if (err instanceof TypeError || (err.message && err.message.includes('fetch'))) {
+                    console.warn(`Backend offline saat mengakses ${endpoint}. Beralih ke Standalone Mode.`);
+                    isStandaloneMode = true;
+                    updateStandaloneBanner();
+                    return await simulateApi(endpoint, options);
+                }
+                console.error(`API Error [${endpoint}]:`, err);
+                throw err;
+            }
+        }
+
+        // Quick auto fill login untuk kemudahan testing
+        function quickFillLogin(email, password) {
+            document.getElementById('sidebar-email').value = email;
+            document.getElementById('sidebar-password').value = password;
+        }
+
+        // Hubungkan Neon langsung dari Browser modal
+        async function connectNeonFromUI() {
+            const input = document.getElementById('inp-neon-url');
+            const feedback = document.getElementById('neon-connect-feedback');
+            const btn = document.getElementById('btn-neon-connect');
+            const url = input.value.trim();
+
+            if (!url) {
+                feedback.innerText = 'Silakan tempel connection string Neon Anda terlebih dahulu.';
+                feedback.className = 'text-[11px] text-amber-400';
+                return;
+            }
+
+            if (isStandaloneMode) {
+                feedback.innerText = 'Server backend belum berjalan. Jalankan `npm run dev` di terminal PowerShell, lalu muat ulang halaman.';
+                feedback.className = 'text-[11px] text-amber-400';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>Menghubungkan...</span>';
+            feedback.innerText = 'Menguji koneksi ke server Neon & sinkronisasi skema...';
+            feedback.className = 'text-[11px] text-blue-400';
+
+            try {
+                const res = await apiFetch('/api/health/configure', {
+                    method: 'POST',
+                    body: JSON.stringify({ databaseUrl: url })
+                });
+                feedback.innerText = res.message || 'Berhasil terhubung ke Neon PostgreSQL!';
+                feedback.className = 'text-[11px] text-emerald-400 font-semibold';
+                showToast('Database Neon PostgreSQL berhasil dihubungkan!', 'success');
+                input.value = '';
+                await checkNeonStatus();
+                if (currentTab === 'dashboard') await renderDashboard();
+            } catch (err) {
+                feedback.innerText = err.message || 'Gagal menghubungkan ke Neon.';
+                feedback.className = 'text-[11px] text-red-400';
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-round text-xs">link</span><span>Hubungkan ke Neon</span>';
+            }
+        }
+
+        // Cek Status Koneksi Database Neon
+        async function checkNeonStatus() {
+            const dot = document.getElementById('db-indicator-dot');
+            const text = document.getElementById('db-status-text');
+            const guideTitle = document.getElementById('guide-db-status-title');
+            const details = document.getElementById('db-health-details');
+
+            try {
+                const url = apiBaseUrl + '/api/health';
+                const res = await fetch(url);
+                const data = await res.json();
+                isStandaloneMode = false;
+                updateStandaloneBanner();
+
+                if (data.database && data.database.connected) {
+                    dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50";
+                    text.innerText = `Neon DB: Terhubung (${data.database.latency || 'OK'})`;
+                    text.className = "font-semibold text-emerald-400";
+                    guideTitle.innerText = "Database Neon PostgreSQL terhubung aktif & live!";
+                    details.innerHTML = `
+                        <p class="text-emerald-400 font-bold">Status: Online & Terhubung</p>
+                        <p><span class="text-slate-400">Target Server:</span> ${data.database.target}</p>
+                        <p><span class="text-slate-400">Latency:</span> ${data.database.latency}</p>
+                        <p><span class="text-slate-400">Mode:</span> ${data.database.mode}</p>
+                    `;
+                } else {
+                    dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+                    text.innerText = "Neon DB: Standby (Klik)";
+                    text.className = "font-semibold text-amber-300";
+                    guideTitle.innerText = "Backend Aktif (Menunggu Koneksi Neon DB)";
+                    details.innerHTML = `
+                        <p class="text-amber-400 font-bold">Status: Server Siap (Local Fallback Aktif)</p>
+                        <p class="text-slate-400 mt-1">${data.database?.error || 'DATABASE_URL Neon belum diisi di file .env'}</p>
+                        <p class="text-slate-300 mt-2">👉 Masukkan connection string Neon Anda di formulir bawah untuk sinkronisasi cloud.</p>
+                    `;
+                }
+            } catch (err) {
+                isStandaloneMode = true;
+                updateStandaloneBanner();
+                dot.className = "w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse";
+                text.innerText = "Mode Lokal (Klik)";
+                text.className = "font-semibold text-cyan-300";
+                guideTitle.innerText = "Aplikasi Berjalan dalam Standalone Mode";
+                details.innerHTML = `
+                    <p class="text-cyan-400 font-bold">Status: Standalone / Offline Mode</p>
+                    <p class="text-slate-400 mt-1">Backend belum berjalan di http://localhost:3000.</p>
+                    <p class="text-slate-300 mt-2 font-mono text-[11px] bg-slate-950 p-2 rounded border border-slate-800">
+                        Jalankan di terminal: <span class="text-emerald-400">npm run dev</span>
+                    </p>
+                `;
+            }
+        }
+
+        function openDbGuideModal() {
+            document.getElementById('modal-db-guide').classList.remove('hidden');
+        }
+
+        function closeDbGuideModal() {
+            document.getElementById('modal-db-guide').classList.add('hidden');
+        }
+
+        // Handle Login
+        async function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('login-email').value.trim();
+            const passInput = document.getElementById('login-password').value.trim();
+            const submitBtn = document.getElementById('login-submit');
+            const errorMsg = document.getElementById('login-error');
+
+            // Clear previous errors
+            errorMsg.classList.remove('visible');
+            errorMsg.textContent = '';
+
+            if (!emailInput || !passInput) {
+                errorMsg.textContent = 'Email dan kata sandi wajib diisi!';
+                errorMsg.classList.add('visible');
+                return;
+            }
+
+            submitBtn.classList.add('loading');
+            submitBtn.querySelector('.btn-text').innerHTML = '<span class="loading-spinner"></span> Memproses...';
+
+            try {
+                const res = await apiFetch('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: emailInput, password: passInput })
+                });
+
+                authToken = res.token;
+                localStorage.setItem('auth_token', authToken);
+                currentUser = res.user;
+
+                // Hide login screen
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('login-overlay-backdrop').classList.add('hidden');
+
+                // Show main app
+                document.getElementById('app-container').classList.remove('hidden');
+
+                updateAuthUI();
+                showToast(res.message || 'Berhasil masuk!', 'success');
+                switchTab('dashboard');
+                checkNeonStatus();
+            } catch (err) {
+                errorMsg.textContent = err.message || 'Login gagal. Periksa email dan kata sandi.';
+                errorMsg.classList.add('visible');
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.querySelector('.btn-text').innerHTML = 'Masuk';
+            }
+        }
+
+        // Handle Logout
+        function handleLogout(notify = true) {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('auth_token');
+            updateAuthUI();
+            if (notify) showToast('Anda telah keluar dari akun.', 'info');
+            switchTab('dashboard');
+            // Show login screen
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-overlay-backdrop').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+        }
+
+        // Update Tampilan UI Sesuai Status Login
+        function updateAuthUI() {
+            const badge = document.getElementById('user-role-badge');
+            const userName = document.getElementById('user-display-name');
+            const indicator = document.getElementById('status-indicator');
+            const loggedOutSection = document.getElementById('sidebar-auth-loggedout');
+            const loggedInSection = document.getElementById('sidebar-auth-loggedin');
+            const ownerElements = document.querySelectorAll('.owner-only');
+            const ownerGrid = document.getElementById('dashboard-stats-owner');
+            const userGrid = document.getElementById('dashboard-stats-user');
+            const loginScreen = document.getElementById('login-screen');
+            const loginBackdrop = document.getElementById('login-overlay-backdrop');
+            const appContainer = document.getElementById('app-container');
+
+            if (currentUser) {
+                loggedOutSection.classList.add('hidden');
+                loggedInSection.classList.remove('hidden');
+                loginScreen.classList.add('hidden');
+                loginBackdrop.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+
+                document.getElementById('sidebar-user-name').innerText = currentUser.name;
+                document.getElementById('sidebar-user-email').innerText = currentUser.email;
+                document.getElementById('user-avatar-initial').innerText = currentUser.name.charAt(0).toUpperCase();
+
+                userName.innerText = currentUser.name;
+                badge.innerText = currentUser.role.toUpperCase();
+                badge.className = currentUser.role === 'owner'
+                    ? "inline-block px-2 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full uppercase tracking-wider mt-0.5"
+                    : "inline-block px-2 py-0.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full uppercase tracking-wider mt-0.5";
+                
+                indicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50";
+
+                if (currentUser.role === 'owner') {
+                    ownerElements.forEach(el => el.classList.remove('hidden'));
+                    ownerGrid.classList.remove('hidden');
+                    userGrid.classList.add('hidden');
+                } else {
+                    ownerElements.forEach(el => el.classList.add('hidden'));
+                    ownerGrid.classList.add('hidden');
+                    userGrid.classList.remove('hidden');
+                }
+            } else {
+                loggedOutSection.classList.add('hidden');
+                loggedInSection.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                loginBackdrop.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+
+                userName.innerText = 'Tamu (Belum Login)';
+                badge.innerText = 'Belum Login';
+                badge.className = "inline-block px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full uppercase tracking-wider mt-0.5";
+                indicator.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+
+                ownerElements.forEach(el => el.classList.add('hidden'));
+                ownerGrid.classList.remove('hidden');
+                userGrid.classList.add('hidden');
+            }
+        }
+
+        // Tab Navigation
+        async function switchTab(tabName) {
+            if (!currentUser && tabName !== 'dashboard') {
+                showToast('Akses ditolak! Silakan login terlebih dahulu untuk mengakses menu ini.', 'warning');
+                return;
+            }
+
+            if (currentUser && currentUser.role !== 'owner' && tabName === 'users') {
+                tabName = 'dashboard';
+                showToast('Menu User Management hanya untuk Owner.', 'warning');
+            }
+
+            currentTab = tabName;
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const targetSection = document.getElementById(`tab-${tabName}`);
+            if (targetSection) targetSection.classList.remove('hidden');
+
+            ['dashboard', 'users', 'tasks', 'reports', 'reminders'].forEach(t => {
+                const btn = document.getElementById(`nav-${t}`);
+                if (btn) {
+                    btn.classList.remove('active-nav');
+                    btn.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all";
+                }
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active-nav');
+                activeBtn.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-medium text-white bg-blue-600 shadow-md shadow-blue-600/20 transition-all active-nav";
+            }
+
+            const titles = {
+                dashboard: ['Dashboard', currentUser ? 'Ringkasan aktivitas dan statistik sistem terkini' : 'Silakan login terlebih dahulu untuk mengakses sistem'],
+                users: ['User Management', 'Kelola data pengguna aplikasi dengan otentikasi role'],
+                tasks: ['Task Management', 'Kelola daftar tugas dan pantau deadline pekerjaan'],
+                reports: ['Report Management', 'Kelola laporan pekerjaan dan status terkirim'],
+                reminders: ['Reminder', 'Kelola jadwal agenda penting dan tenggat waktu']
+            };
+
+            if (titles[tabName]) {
+                document.getElementById('page-title').innerText = titles[tabName][0];
+                document.getElementById('page-desc').innerText = titles[tabName][1];
+            }
+
+            if (tabName === 'dashboard') await renderDashboard();
+            if (tabName === 'users') await renderUsers();
+            if (tabName === 'tasks') await renderTasks();
+            if (tabName === 'reports') await renderReports();
+            if (tabName === 'reminders') await renderReminders();
+        }
+
+        // ================= RENDERING DATA DARI API =================
+
+        // Render Dashboard
+        async function renderDashboard() {
+            const tbody = document.getElementById('nearest-deadline-table');
+
+            if (!currentUser) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-5 py-6 text-center text-slate-500">Silakan login untuk melihat deadline dan statistik terbaru.</td></tr>`;
+                document.getElementById('stat-users').innerText = '0';
+                document.getElementById('stat-tasks').innerText = '0';
+                document.getElementById('stat-reports').innerText = '0';
+                return;
+            }
+
+            try {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-5 py-6 text-center text-slate-500">Memuat data dari database...</td></tr>`;
+                const res = await apiFetch('/api/dashboard/stats');
+                const stats = res.stats;
+
+                document.getElementById('stat-users').innerText = stats.system.users;
+                document.getElementById('stat-tasks').innerText = stats.system.tasks;
+                document.getElementById('stat-reports').innerText = stats.system.reports;
+
+                document.getElementById('stat-user-tasks').innerText = stats.user.tasks;
+                document.getElementById('stat-user-reports').innerText = stats.user.reports;
+                document.getElementById('stat-user-reminders').innerText = stats.user.reminders;
+
+                tbody.innerHTML = '';
+                if (!stats.nearestDeadlines || stats.nearestDeadlines.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-5 py-6 text-center text-slate-500">Tidak ada deadline terdekat saat ini.</td></tr>`;
+                    return;
+                }
+
+                stats.nearestDeadlines.forEach(item => {
+                    let badgeClass = 'badge-status badge-proses';
+                    if (item.status === 'Pending') badgeClass = 'badge-status badge-pending';
+                    if (item.status === 'Selesai') badgeClass = 'badge-status badge-selesai';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-5 py-4 font-semibold text-white">${escapeHtml(item.name)}</td>
+                            <td class="px-5 py-4 text-slate-300 font-mono text-xs">${item.deadline}</td>
+                            <td class="px-5 py-4"><span class="badge-status ${badgeClass}">${item.status}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-5 py-6 text-center text-red-400">Gagal memuat dashboard: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Render Users (Owner Only)
+        async function renderUsers() {
+            const search = document.getElementById('search-user')?.value || '';
+            const role = document.getElementById('filter-user-role')?.value || '';
+            const sort = document.getElementById('sort-user')?.value || 'az';
+            const tbody = document.getElementById('user-table-body');
+
+            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">Memuat data pengguna...</td></tr>`;
+
+            try {
+                const query = new URLSearchParams({ search, role, sort }).toString();
+                const res = await apiFetch(`/api/users?${query}`);
+                cacheData.users = res.users;
+
+                tbody.innerHTML = '';
+                if (!res.users || res.users.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">Tidak ada user ditemukan.</td></tr>`;
+                    return;
+                }
+
+                res.users.forEach(u => {
+                    const isSelf = currentUser && currentUser.id === u.id;
+                    const roleBadge = u.role === 'owner'
+                        ? 'badge-status badge-proses'
+                        : 'badge-status badge-aktif';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-6 py-4 font-semibold text-white flex items-center space-x-2">
+                                <span>${escapeHtml(u.name)}</span>
+                                ${isSelf ? '<span class="px-1.5 py-0.5 text-[9px] bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">Anda</span>' : ''}
+                            </td>
+                            <td class="px-6 py-4 text-slate-300">${escapeHtml(u.email)}</td>
+                            <td class="px-6 py-4"><span class="badge-status ${roleBadge}">${u.role}</span></td>
+                            <td class="px-6 py-4 text-right space-x-3">
+                                <button onclick="openModal('user', 'edit', ${u.id})" class="text-blue-400 hover:text-blue-300 text-sm font-semibold transition cursor-pointer">Edit</button>
+                                ${!isSelf ? `<button onclick="deleteItem('user', ${u.id})" class="text-red-400 hover:text-red-300 text-sm font-semibold transition cursor-pointer">Hapus</button>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-400">Gagal mengambil data user: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Render Tasks
+        async function renderTasks() {
+            const search = document.getElementById('search-task')?.value || '';
+            const status = document.getElementById('filter-task-status')?.value || '';
+            const sort = document.getElementById('sort-task')?.value || 'deadline-asc';
+            const tbody = document.getElementById('task-table-body');
+
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Memuat daftar tugas...</td></tr>`;
+
+            try {
+                const query = new URLSearchParams({ search, status, sort }).toString();
+                const res = await apiFetch(`/api/tasks?${query}`);
+                cacheData.tasks = res.tasks;
+
+                tbody.innerHTML = '';
+                if (!res.tasks || res.tasks.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Tidak ada task ditemukan.</td></tr>`;
+                    return;
+                }
+
+                res.tasks.forEach(t => {
+                    let badgeClass = 'badge-status badge-pending';
+                    if (t.status === 'Proses') badgeClass = 'badge-status badge-proses';
+                    if (t.status === 'Selesai') badgeClass = 'badge-status badge-selesai';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-6 py-4 font-semibold text-white">${escapeHtml(t.name)}</td>
+                            <td class="px-6 py-4 text-slate-300 text-xs max-w-xs truncate">${escapeHtml(t.desc)}</td>
+                            <td class="px-6 py-4 text-slate-300 font-mono text-xs">${t.deadline}</td>
+                            <td class="px-6 py-4"><span class="badge-status ${badgeClass}">${t.status}</span></td>
+                            <td class="px-6 py-4 text-right space-x-3">
+                                <button onclick="openModal('task', 'edit', ${t.id})" class="text-blue-400 hover:text-blue-300 text-sm font-semibold transition cursor-pointer">Edit</button>
+                                <button onclick="deleteItem('task', ${t.id})" class="text-red-400 hover:text-red-300 text-sm font-semibold transition cursor-pointer">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">Gagal mengambil data task: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Render Reports
+        async function renderReports() {
+            const search = document.getElementById('search-report')?.value || '';
+            const status = document.getElementById('filter-report-status')?.value || '';
+            const sort = document.getElementById('sort-report')?.value || 'deadline-asc';
+            const tbody = document.getElementById('report-table-body');
+
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Memuat daftar laporan...</td></tr>`;
+
+            try {
+                const query = new URLSearchParams({ search, status, sort }).toString();
+                const res = await apiFetch(`/api/reports?${query}`);
+                cacheData.reports = res.reports;
+
+                tbody.innerHTML = '';
+                if (!res.reports || res.reports.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Tidak ada report ditemukan.</td></tr>`;
+                    return;
+                }
+
+                res.reports.forEach(r => {
+                    const badgeClass = r.status === 'Terkirim'
+                        ? 'badge-status badge-terkirim'
+                        : 'badge-status badge-draft';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-6 py-4 font-semibold text-white">${escapeHtml(r.name)}</td>
+                            <td class="px-6 py-4 text-slate-300 text-xs max-w-xs truncate">${escapeHtml(r.desc)}</td>
+                            <td class="px-6 py-4 text-slate-300 font-mono text-xs">${r.deadline}</td>
+                            <td class="px-6 py-4"><span class="badge-status ${badgeClass}">${r.status}</span></td>
+                            <td class="px-6 py-4 text-right space-x-3">
+                                <button onclick="openModal('report', 'edit', ${r.id})" class="text-blue-400 hover:text-blue-300 text-sm font-semibold transition cursor-pointer">Edit</button>
+                                <button onclick="deleteItem('report', ${r.id})" class="text-red-400 hover:text-red-300 text-sm font-semibold transition cursor-pointer">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">Gagal mengambil data report: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Render Reminders
+        async function renderReminders() {
+            const search = document.getElementById('search-reminder')?.value || '';
+            const status = document.getElementById('filter-reminder-status')?.value || '';
+            const sort = document.getElementById('sort-reminder')?.value || 'deadline-asc';
+            const tbody = document.getElementById('reminder-table-body');
+
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Memuat daftar reminder...</td></tr>`;
+
+            try {
+                const query = new URLSearchParams({ search, status, sort }).toString();
+                const res = await apiFetch(`/api/reminders?${query}`);
+                cacheData.reminders = res.reminders;
+
+                tbody.innerHTML = '';
+                if (!res.reminders || res.reminders.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Tidak ada reminder ditemukan.</td></tr>`;
+                    return;
+                }
+
+                res.reminders.forEach(rm => {
+                    const badgeClass = rm.status === 'Aktif'
+                        ? 'badge-status badge-aktif'
+                        : 'badge-status badge-selesai-reminder';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-6 py-4 font-semibold text-white">${escapeHtml(rm.name)}</td>
+                            <td class="px-6 py-4 text-slate-300 text-xs max-w-xs truncate">${escapeHtml(rm.desc)}</td>
+                            <td class="px-6 py-4 text-slate-300 font-mono text-xs">${rm.deadline}</td>
+                            <td class="px-6 py-4"><span class="badge-status ${badgeClass}">${rm.status}</span></td>
+                            <td class="px-6 py-4 text-right space-x-3">
+                                <button onclick="openModal('reminder', 'edit', ${rm.id})" class="text-blue-400 hover:text-blue-300 text-sm font-semibold transition cursor-pointer">Edit</button>
+                                <button onclick="deleteItem('reminder', ${rm.id})" class="text-red-400 hover:text-red-300 text-sm font-semibold transition cursor-pointer">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">Gagal mengambil data reminder: ${err.message}</td></tr>`;
+            }
+        }
+
+        // ================= MODAL & CRUD ACTIONS =================
+
+        function openModal(type, mode, id = null) {
+            if (!currentUser) {
+                showToast('Silakan login terlebih dahulu untuk mengelola data!', 'warning');
+                return;
+            }
+
+            document.getElementById('modal-form').classList.remove('hidden');
+            document.getElementById('form-type').value = type;
+            document.getElementById('form-id').value = id || '';
+
+            const titleMap = {
+                user: 'User',
+                task: 'Task',
+                report: 'Report',
+                reminder: 'Reminder'
+            };
+
+            document.getElementById('modal-title').innerText = `${mode === 'create' ? 'Tambah' : 'Edit'} ${titleMap[type]}`;
+
+            let item = {};
+            if (mode === 'edit' && id) {
+                const list = cacheData[type + 's'] || [];
+                item = list.find(x => x.id === id) || {};
+            }
+
+            const fieldsContainer = document.getElementById('form-fields');
+            fieldsContainer.innerHTML = '';
+
+            if (type === 'user') {
+                fieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nama User</label>
+                        <input type="text" id="inp-name" required value="${escapeHtml(item.name || '')}" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Email</label>
+                        <input type="email" id="inp-email" required value="${escapeHtml(item.email || '')}" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Password ${mode === 'edit' ? '(Kosongkan jika tidak diubah)' : ''}</label>
+                        <input type="password" id="inp-password" ${mode === 'create' ? 'required' : ''} placeholder="${mode === 'edit' ? 'Biarkan kosong untuk mempertahankan password lama' : 'Password baru'}" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Role</label>
+                        <select id="inp-role" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                            <option value="user" ${item.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="owner" ${item.role === 'owner' ? 'selected' : ''}>Owner</option>
+                        </select>
+                    </div>
+                `;
+            } else {
+                let statusOptions = '';
+                if (type === 'task') {
+                    statusOptions = `
+                        <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Proses" ${item.status === 'Proses' ? 'selected' : ''}>Proses</option>
+                        <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                    `;
+                } else if (type === 'report') {
+                    statusOptions = `
+                        <option value="Draft" ${item.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                        <option value="Terkirim" ${item.status === 'Terkirim' ? 'selected' : ''}>Terkirim</option>
+                    `;
+                } else if (type === 'reminder') {
+                    statusOptions = `
+                        <option value="Aktif" ${item.status === 'Aktif' ? 'selected' : ''}>Aktif</option>
+                        <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                    `;
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                const defaultDeadline = item.deadline || today;
+
+                fieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nama ${titleMap[type]}</label>
+                        <input type="text" id="inp-name" required value="${escapeHtml(item.name || '')}" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Deskripsi</label>
+                        <textarea id="inp-desc" required rows="3" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">${escapeHtml(item.desc || '')}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Deadline</label>
+                        <input type="date" id="inp-deadline" required value="${defaultDeadline}" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Status</label>
+                        <select id="inp-status" class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 rounded-xl text-sm text-white focus:outline-none">
+                            ${statusOptions}
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal-form').classList.add('hidden');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const type = document.getElementById('form-type').value;
+            const id = document.getElementById('form-id').value;
+            const submitBtn = document.getElementById('btn-submit-modal');
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Menyimpan...';
+
+            try {
+                let payload = {};
+                let endpoint = `/api/${type}s`;
+                let method = id ? 'PUT' : 'POST';
+
+                if (id) {
+                    endpoint += `/${id}`;
+                }
+
+                if (type === 'user') {
+                    payload = {
+                        name: document.getElementById('inp-name').value.trim(),
+                        email: document.getElementById('inp-email').value.trim(),
+                        role: document.getElementById('inp-role').value,
+                    };
+                    const passwordVal = document.getElementById('inp-password').value;
+                    if (passwordVal) payload.password = passwordVal;
+                } else {
+                    payload = {
+                        name: document.getElementById('inp-name').value.trim(),
+                        desc: document.getElementById('inp-desc').value.trim(),
+                        deadline: document.getElementById('inp-deadline').value,
+                        status: document.getElementById('inp-status').value,
+                    };
+                }
+
+                const res = await apiFetch(endpoint, {
+                    method,
+                    body: JSON.stringify(payload),
+                });
+
+                showToast(res.message || 'Data berhasil disimpan!', 'success');
+                closeModal();
+
+                if (type === 'user') await renderUsers();
+                if (type === 'task') await renderTasks();
+                if (type === 'report') await renderReports();
+                if (type === 'reminder') await renderReminders();
+                if (currentTab === 'dashboard') await renderDashboard();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Simpan';
+            }
+        }
+
+        async function deleteItem(type, id) {
+            if (!currentUser) {
+                showToast('Silakan login terlebih dahulu!', 'warning');
+                return;
+            }
+
+            if (!confirm(`Apakah Anda yakin ingin menghapus data ${type} ini secara permanen dari database?`)) {
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/${type}s/${id}`, {
+                    method: 'DELETE'
+                });
+
+                showToast(res.message || 'Data berhasil dihapus.', 'success');
+
+                if (type === 'user') await renderUsers();
+                if (type === 'task') await renderTasks();
+                if (type === 'report') await renderReports();
+                if (type === 'reminder') await renderReminders();
+                if (currentTab === 'dashboard') await renderDashboard();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function escapeHtml(string) {
+            if (!string) return '';
+            return String(string)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Inisialisasi saat window dimuat
+        window.onload = async function() {
+            // 1. Cek kesehatan database Neon
+            checkNeonStatus();
+
+            // 2. Jika ada token lama tersimpan, coba pulihkan sesi
+            if (authToken) {
+                try {
+                    const res = await apiFetch('/api/auth/me');
+                    currentUser = res.user;
+                } catch (e) {
+                    authToken = null;
+                    localStorage.removeItem('auth_token');
+                }
+            }
+
+            updateAuthUI();
+            switchTab('dashboard');
+
+            // 3. Jika belum login, tampilkan layar login
+            if (!currentUser) {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('login-overlay-backdrop').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
+
+            // Cek status database secara berkala setiap 30 detik
+            setInterval(checkNeonStatus, 30000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.env*
+.envrc
+.envrc.*
+*.bak
+*.bak.*
+*.log
+/data/
+/node_modules/
+/.git/
+/.vercel/
